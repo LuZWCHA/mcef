@@ -191,6 +191,7 @@ public class BrowserScreen extends GuiScreen {
                 else if(btn == -1)
                     browser.injectMouseMove(sx, y, 0, y < 0);
                 else {
+                    // remap to AWT's Mouse button ID
                     int btn_ = btn;
                     if(btn_ == 0){
                         btn_ = MouseEvent.BUTTON1;

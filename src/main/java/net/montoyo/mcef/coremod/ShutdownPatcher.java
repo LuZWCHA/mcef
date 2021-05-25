@@ -8,10 +8,12 @@ import org.objectweb.asm.*;
 
 import java.util.Map;
 
+// TODO: 2021/5/25 to remove the transformer and replace it by MIXIN
 @IFMLLoadingPlugin.Name(value = "ShutdownPatcher")
 @IFMLLoadingPlugin.TransformerExclusions(value = "net.montoyo.mcef.")
 @IFMLLoadingPlugin.SortingIndex(value = 90007531) //It has to run after the searge-name transformation
 @IFMLLoadingPlugin.MCVersion("1.12.2")
+@Deprecated
 public class ShutdownPatcher implements IFMLLoadingPlugin, IClassTransformer {
 
     private static boolean PATCH_OK = false;

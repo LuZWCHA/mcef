@@ -133,6 +133,7 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
 
     @Override
     public void onCursorChange(IBrowser browser, String value) {
+        // TODO: 2021/5/25 it's not easy to change the cursor, because the LWJGL(Version < 3) don't support the function
 //        if("12".equals(value)){
 //            Cursor cur = Mouse.getNativeCursor();
 //            try {

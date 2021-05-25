@@ -1,13 +1,13 @@
---- jni_util_win---orig.cpp	2019-07-19 18:49:13.673667400 +0200
-+++ jni_util_win.cpp	2019-07-19 18:49:41.638855300 +0200
-@@ -4,52 +4,6 @@
+--- origin/jni_util_win.cpp	2021-05-25 23:11:50.979118000 +0800
++++ new/jni_util_win.cpp	2021-05-25 16:55:26.106586700 +0800
+@@ -4,52 +4,8 @@
  
  #include "jni_util.h"
  
 -#include <assert.h>
 -#include <jawt.h>
 -#include <jawt_md.h>
--
+ 
  HWND GetHwndOfCanvas(jobject canvas, JNIEnv* env) {
 -  JAWT awt;
 -  JAWT_DrawingSurface* ds;
@@ -52,5 +52,6 @@
 -  awt.FreeDrawingSurface(ds);
 -
 -  return result;
++  
 +  return nullptr;
  }

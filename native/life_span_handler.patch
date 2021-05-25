@@ -1,0 +1,26 @@
+--- origin/life_span_handler.cpp	2021-05-25 23:11:50.980118000 +0800
++++ new/life_span_handler.cpp	2021-05-25 12:00:12.078812600 +0800
+@@ -24,10 +24,7 @@
+                                     CefBrowserSettings& settings,
+                                     CefRefPtr<CefDictionaryValue>& extra_info,
+                                     bool* no_javascript_access) {
+-  if (browser->GetHost()->IsWindowRenderingDisabled()) {
+-    // Cancel popups in off-screen rendering mode.
+-    return true;
+-  }
++  
+ 
+   ScopedJNIEnv env;
+   if (!env)
+@@ -46,6 +43,11 @@
+                   Boolean, jreturn, jbrowser.get(), jframe.get(),
+                   jtargetUrl.get(), jtargetFrameName.get());
+ 
++  if (browser->GetHost()->IsWindowRenderingDisabled()) {
++    // Cancel popups in off-screen rendering mode.
++    return true;
++  }
++
+   return (jreturn != JNI_FALSE);
+ }
+ 

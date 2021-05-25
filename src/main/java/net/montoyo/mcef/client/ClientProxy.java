@@ -68,21 +68,13 @@ public class ClientProxy extends BaseProxy {
     private final CefLifeSpanHandlerAdapter cefLifeSpanHandlerAdapter = new CefLifeSpanHandlerAdapter() {
 
         @Override
-        public void onAfterCreated(CefBrowser browser) {
-            System.out.println("onAfterCreated");
-            super.onAfterCreated(browser);
-        }
-
-        @Override
         public boolean doClose(CefBrowser browser) {
-            System.out.println("doClose");
             browser.close(true);
             return false;
         }
 
         @Override
         public boolean onBeforePopup(CefBrowser browser, CefFrame frame, String target_url, String target_frame_name) {
-            System.out.println("open: " + target_url);
             browser.loadURL(target_url);
             return true;
         }
@@ -283,7 +275,6 @@ public class ClientProxy extends BaseProxy {
 
         cefClient.addMessageRouter(cefRouter);
         cefClient.addDisplayHandler(displayHandler);
-//        cefClient.addLifeSpanHandler(cefLifeSpanHandlerAdapter);
 
         if(!ShutdownPatcher.didPatchSucceed()) {
             Log.warning("ShutdownPatcher failed to patch Minecraft.run() method; starting ShutdownThread...");
