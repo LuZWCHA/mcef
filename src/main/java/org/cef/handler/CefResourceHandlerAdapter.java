@@ -17,8 +17,7 @@ import org.cef.network.CefResponse;
  * The methods in this class are empty.
  * This class exists as convenience for creating handler objects.
  */
-public abstract class CefResourceHandlerAdapter
-        extends CefNativeAdapter implements CefResourceHandler {
+public abstract class CefResourceHandlerAdapter implements CefResourceHandler {
     @Override
     public boolean processRequest(CefRequest request, CefCallback callback) {
         return false;

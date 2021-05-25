@@ -34,6 +34,7 @@ import org.cef.handler.CefRenderHandler;
 import org.cef.handler.CefRequestHandler;
 import org.cef.handler.CefResourceHandler;
 import org.cef.handler.CefResourceRequestHandler;
+import org.cef.handler.CefScreenInfo;
 import org.cef.handler.CefWindowHandler;
 import org.cef.misc.BoolRef;
 import org.cef.misc.StringRef;
@@ -66,7 +67,7 @@ public class CefClient extends CefClientHandler
                    CefDragHandler, CefFocusHandler, CefJSDialogHandler, CefKeyboardHandler,
                    CefLifeSpanHandler, CefLoadHandler, CefRenderHandler, CefRequestHandler,
                    CefWindowHandler {
-    private HashMap<Integer, CefBrowser> browser_ = new HashMap<Integer, CefBrowser>();
+    private HashMap<Integer, CefBrowser> browser_ = new HashMap<>();
     private CefContextMenuHandler contextMenuHandler_ = null;
     private CefDialogHandler dialogHandler_ = null;
     private CefDisplayHandler displayHandler_ = null;
@@ -319,6 +320,24 @@ public class CefClient extends CefClientHandler
         return false;
     }
 
+    @Override
+    public boolean onCursorChange(CefBrowser browser, int cursorType) {
+        if (browser == null) {
+            return false;
+        }
+
+        if (displayHandler_ != null && displayHandler_.onCursorChange(browser, cursorType)) {
+            return true;
+        }
+
+        CefRenderHandler realHandler = browser.getRenderHandler();
+        if (realHandler != null) {
+            return realHandler.onCursorChange(browser, cursorType);
+        }
+
+        return false;
+    }
+
     // CefDownloadHandler
 
     public CefClient addDownloadHandler(CefDownloadHandler handler) {
@@ -345,7 +364,6 @@ public class CefClient extends CefClientHandler
     }
 
     // CefDragHandler
-
     public CefClient addDragHandler(CefDragHandler handler) {
         if (dragHandler_ == null) dragHandler_ = handler;
         return this;
@@ -487,7 +505,6 @@ public class CefClient extends CefClientHandler
     }
 
     // CefLifeSpanHandler
-
     public CefClient addLifeSpanHandler(CefLifeSpanHandler handler) {
         if (lifeSpanHandler_ == null) lifeSpanHandler_ = handler;
         return this;
@@ -674,14 +691,6 @@ public class CefClient extends CefClientHandler
     }
 
     @Override
-    public void onCursorChange(CefBrowser browser, int cursorType) {
-        if (browser == null) return;
-
-        CefRenderHandler realHandler = browser.getRenderHandler();
-        if (realHandler != null) realHandler.onCursorChange(browser, cursorType);
-    }
-
-    @Override
     public boolean startDragging(CefBrowser browser, CefDragData dragData, int mask, int x, int y) {
         if (browser == null) return false;
 
@@ -719,6 +728,15 @@ public class CefClient extends CefClientHandler
     }
 
     @Override
+    public boolean onOpenURLFromTab(
+            CefBrowser browser, CefFrame frame, String target_url, boolean user_gesture) {
+		if (isDisposed_) return true;
+        if (requestHandler_ != null && browser != null)
+            return requestHandler_.onOpenURLFromTab(browser, frame, target_url, user_gesture);
+        return false;
+    }
+
+    @Override
     public CefResourceRequestHandler getResourceRequestHandler(CefBrowser browser, CefFrame frame,
             CefRequest request, boolean isNavigation, boolean isDownload, String requestInitiator,
             BoolRef disableDefaultHandling) {
@@ -730,11 +748,11 @@ public class CefClient extends CefClientHandler
     }
 
     @Override
-    public boolean getAuthCredentials(CefBrowser browser, CefFrame frame, boolean isProxy,
+    public boolean getAuthCredentials(CefBrowser browser, String origin_url, boolean isProxy,
             String host, int port, String realm, String scheme, CefAuthCallback callback) {
         if (requestHandler_ != null && browser != null)
             return requestHandler_.getAuthCredentials(
-                    browser, frame, isProxy, host, port, realm, scheme, callback);
+                    browser, origin_url, isProxy, host, port, realm, scheme, callback);
         return false;
     }
 
@@ -783,5 +801,10 @@ public class CefClient extends CefClientHandler
         CefWindowHandler realHandler = browser.getWindowHandler();
         if (realHandler != null)
             realHandler.onMouseEvent(browser, event, screenX, screenY, modifier, button);
+    }
+
+    @Override
+    public boolean getScreenInfo(CefBrowser arg0, CefScreenInfo arg1) {
+        return false;
     }
 }

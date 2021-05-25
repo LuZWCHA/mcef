@@ -15,8 +15,12 @@ import java.util.regex.Pattern;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.SplashProgress;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.registries.ForgeRegistry;
 import net.montoyo.mcef.coremod.ShutdownPatcher;
 import net.montoyo.mcef.api.IScheme;
 import net.montoyo.mcef.utilities.ForgeProgressListener;
@@ -26,9 +30,7 @@ import org.cef.CefApp;
 import org.cef.CefClient;
 import org.cef.CefSettings;
 import org.cef.OS;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefBrowserOsr;
-import org.cef.browser.CefMessageRouter;
+import org.cef.browser.*;
 import org.cef.browser.CefMessageRouter.CefMessageRouterConfig;
 
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -44,8 +46,9 @@ import net.montoyo.mcef.example.ExampleMod;
 import net.montoyo.mcef.remote.RemoteConfig;
 import net.montoyo.mcef.utilities.Log;
 import net.montoyo.mcef.virtual.VirtualBrowser;
-import org.cef.browser.CefRenderer;
 import org.cef.handler.CefLifeSpanHandlerAdapter;
+import org.cef.handler.CefLoadHandlerAdapter;
+import org.cef.network.CefRequest;
 
 import javax.swing.*;
 
@@ -62,6 +65,28 @@ public class ClientProxy extends BaseProxy {
     private final Minecraft mc = Minecraft.getMinecraft();
     private final DisplayHandler displayHandler = new DisplayHandler();
     private final HashMap<String, String> mimeTypeMap = new HashMap<>();
+    private final CefLifeSpanHandlerAdapter cefLifeSpanHandlerAdapter = new CefLifeSpanHandlerAdapter() {
+
+        @Override
+        public void onAfterCreated(CefBrowser browser) {
+            System.out.println("onAfterCreated");
+            super.onAfterCreated(browser);
+        }
+
+        @Override
+        public boolean doClose(CefBrowser browser) {
+            System.out.println("doClose");
+            browser.close(true);
+            return false;
+        }
+
+        @Override
+        public boolean onBeforePopup(CefBrowser browser, CefFrame frame, String target_url, String target_frame_name) {
+            System.out.println("open: " + target_url);
+            browser.loadURL(target_url);
+            return true;
+        }
+    };
     private final AppHandler appHandler = new AppHandler();
     private ExampleMod exampleMod;
 
@@ -89,10 +114,11 @@ public class ClientProxy extends BaseProxy {
         ROOT = mc.mcDataDir.getAbsolutePath().replaceAll("\\\\", "/");
         if(ROOT.endsWith("."))
             ROOT = ROOT.substring(0, ROOT.length() - 1);
-        
+
+        // get the root path
         if(ROOT.endsWith("/"))
             ROOT = ROOT.substring(0, ROOT.length() - 1);
-
+        // get the config path
         File fileListing = new File(new File(ROOT), "config");
 
         IProgressListener ipl;
@@ -227,10 +253,17 @@ public class ClientProxy extends BaseProxy {
                     f = f.getAbsoluteFile();
                 }
 
+                System.out.println(f.toPath().toString());
                 System.load(f.getPath());
             }
 
-            CefApp.startup();
+            //todo add framework-dir-path
+            String args[] = {settings.resources_dir_path};
+            if(OS.isMacintosh()){
+                args[0] = "--framework-dir-path=" + settings.resources_dir_path;
+            }
+
+            CefApp.startup(args);
             cefApp = CefApp.getInstance(settings);
             //cefApp.myLoc = ROOT.replace('/', File.separatorChar);
 
@@ -247,15 +280,10 @@ public class ClientProxy extends BaseProxy {
         
         Log.info(cefApp.getVersion().toString());
         cefRouter = CefMessageRouter.create(new CefMessageRouterConfig("mcefQuery", "mcefCancel"));
+
         cefClient.addMessageRouter(cefRouter);
         cefClient.addDisplayHandler(displayHandler);
-        cefClient.addLifeSpanHandler(new CefLifeSpanHandlerAdapter() {
-            @Override
-            public boolean doClose(CefBrowser browser) {
-                browser.close(true);
-                return false;
-            }
-        });
+//        cefClient.addLifeSpanHandler(cefLifeSpanHandlerAdapter);
 
         if(!ShutdownPatcher.didPatchSucceed()) {
             Log.warning("ShutdownPatcher failed to patch Minecraft.run() method; starting ShutdownThread...");
@@ -280,7 +308,12 @@ public class ClientProxy extends BaseProxy {
         
         CefBrowserOsr ret = (CefBrowserOsr) cefClient.createBrowser(url, true, transp);
         ret.setCloseAllowed();
+
+        ret.getClient().removeLifeSpanHandler();
+        ret.getClient().addLifeSpanHandler(cefLifeSpanHandlerAdapter);
+
         ret.createImmediately();
+
 
         browsers.add(ret);
         return ret;

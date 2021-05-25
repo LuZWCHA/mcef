@@ -14,6 +14,7 @@ import net.montoyo.mcef.api.API;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.MCEFApi;
 
+import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -53,6 +54,8 @@ public class BrowserScreen extends GuiScreen {
             
             //Create a browser and resize it to fit the screen
             browser = api.createBrowser((urlToLoad == null) ? MCEF.HOME_PAGE : urlToLoad, false);
+
+
             urlToLoad = null;
         }
         
@@ -140,7 +143,8 @@ public class BrowserScreen extends GuiScreen {
         
         Keyboard.enableRepeatEvents(false);
     }
-    
+
+
     @Override
     public void handleInput() {
         while(Keyboard.next()) {
@@ -160,8 +164,9 @@ public class BrowserScreen extends GuiScreen {
                 else
                     browser.injectKeyReleasedByKeyCode(num, key, 0);
 
+                int code = 0;
                 if(key != 0)
-                    browser.injectKeyTyped(key, 0);
+                    browser.injectKeyTyped(key, code, 0);
             }
             
             //Forward event to text box.
@@ -185,8 +190,19 @@ public class BrowserScreen extends GuiScreen {
                     browser.injectMouseWheel(sx, y, 0, 1, wheel);
                 else if(btn == -1)
                     browser.injectMouseMove(sx, y, 0, y < 0);
-                else
-                    browser.injectMouseButton(sx, y, 0, btn + 1, pressed, 1);
+                else {
+                    int btn_ = btn;
+                    if(btn_ == 0){
+                        btn_ = MouseEvent.BUTTON1;
+                    }else if(btn == 1){
+                        btn_ = MouseEvent.BUTTON3;
+                    }else{
+                        btn_ = MouseEvent.BUTTON2;
+                    }
+                    System.out.println(btn);
+                    browser.injectMouseButton(sx, y, 0, btn_, pressed, 1);
+
+                }
             }
             
             if(pressed) { //Forward events to GUI.

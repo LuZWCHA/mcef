@@ -20,7 +20,8 @@ public class DisplayHandler implements CefDisplayHandler {
         ADDRESS_CHANGE,
         TITLE_CHANGE,
         TOOLTIP,
-        STATUS_MESSAGE;
+        STATUS_MESSAGE,
+        CURSOR_CHANGE
 
     }
 
@@ -52,6 +53,10 @@ public class DisplayHandler implements CefDisplayHandler {
 
                 case STATUS_MESSAGE:
                     idh.onStatusMessage((CefBrowserOsr) browser, data);
+                    break;
+
+                case CURSOR_CHANGE:
+                    idh.onCursorChange((CefBrowserOsr) browser, data);
                     break;
             }
         }
@@ -91,6 +96,14 @@ public class DisplayHandler implements CefDisplayHandler {
     @Override
     public boolean onConsoleMessage(CefBrowser browser, CefSettings.LogSeverity level, String message, String source, int line) {
         return false;
+    }
+
+    @Override
+    public boolean onCursorChange(CefBrowser browser, int cursorType) {
+        synchronized(queue) {
+            queue.add(new EventData(browser, String.valueOf(cursorType), EventType.CURSOR_CHANGE));
+        }
+        return true;
     }
 
     public void addHandler(IDisplayHandler h) {

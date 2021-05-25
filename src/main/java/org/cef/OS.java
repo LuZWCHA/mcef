@@ -5,7 +5,7 @@
 package org.cef;
 
 public class OS {
-    private static enum OSType {
+    private enum OSType {
         OSUndefined,
         OSLinux,
         OSWindows,

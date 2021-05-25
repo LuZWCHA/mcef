@@ -6,6 +6,7 @@
 
 package org.cef.browser;
 
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.IStringVisitor;
@@ -17,8 +18,13 @@ import org.cef.DummyComponent;
 import org.cef.OS;
 import org.cef.callback.CefDragData;
 import org.cef.handler.CefRenderHandler;
+import org.cef.handler.CefScreenInfo;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.input.Cursor;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.Display;
+import sun.reflect.Reflection;
 
 import java.awt.Component;
 import java.awt.Point;
@@ -26,8 +32,11 @@ import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.awt.image.BufferedImage;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This class represents an off-screen rendered browser.
@@ -39,10 +48,15 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     private Rectangle browser_rect_ = new Rectangle(0, 0, 1, 1); // Work around CEF issue #1437.
     private Point screenPoint_ = new Point(0, 0);
     private boolean isTransparent_;
+    private boolean justCreated_;
     private final DummyComponent dc_ = new DummyComponent();
     private MouseEvent lastMouseEvent = new MouseEvent(dc_, MouseEvent.MOUSE_MOVED, 0, 0, 0, 0, 0, false);
 
     public static boolean CLEANUP = true;
+    private long window_handle_;
+    private double scaleFactor_ = 1.0;
+    private int depth = 32;
+    private int depth_per_component = 8;
 
     CefBrowserOsr(CefClient client, String url, boolean transparent, CefRequestContext context) {
         this(client, url, transparent, context, null, null);
@@ -57,6 +71,7 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     @Override
     public void createImmediately() {
+        justCreated_ = true;
         // Create the browser immediately.
         createBrowserIfRequired(false);
     }
@@ -72,6 +87,12 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     }
 
     @Override
+    public CompletableFuture<BufferedImage> createScreenshot(boolean nativeResolution) {
+        //todo create the screenshot by catch the buffer
+        return null;
+    }
+
+    @Override
     protected CefBrowser_N createDevToolsBrowser(CefClient client, String url,
             CefRequestContext context, CefBrowser_N parent, Point inspectAt) {
         return new CefBrowserOsr(
@@ -81,6 +102,13 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     @Override
     public Rectangle getViewRect(CefBrowser browser) {
         return browser_rect_;
+    }
+
+    @Override
+    public boolean getScreenInfo(CefBrowser browser, CefScreenInfo screenInfo) {
+        screenInfo.Set(scaleFactor_, depth, depth_per_component, false, browser_rect_.getBounds(),
+                browser_rect_.getBounds());
+        return false;
     }
 
     @Override
@@ -162,7 +190,9 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     }
 
     @Override
-    public void onCursorChange(CefBrowser browser, final int cursorType) {
+    public boolean onCursorChange(CefBrowser browser, final int cursorType) {
+        // OSR always handles the cursor change.
+        return true;
     }
 
     @Override
@@ -176,19 +206,44 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
         // TODO(JCEF) Prepared for DnD support using OSR mode.
     }
 
+//    private synchronized long getWindowHandle() {
+//        if (window_handle_ == 0) {
+//            NativeSurface surface = canvas_.getNativeSurface();
+//            if (surface != null) {
+//                surface.lockSurface();
+//                window_handle_ = getWindowHandle(surface.getSurfaceHandle());
+//                surface.unlockSurface();
+//                assert (window_handle_ != 0);
+//            }
+//        }
+//        return window_handle_;
+//    }
+
     private void createBrowserIfRequired(boolean hasParent) {
+        long windowHandle = 0;
+        if (hasParent) {
+            windowHandle = 0;
+        }
+
         if (getNativeRef("CefBrowser") == 0) {
             if (getParentBrowser() != null) {
-                createDevTools(getParentBrowser(), getClient(), 0, true, isTransparent_,
+                createDevTools(getParentBrowser(), getClient(), windowHandle, true, isTransparent_,
                         null, getInspectAt());
             } else {
-                createBrowser(getClient(), 0, getUrl(), true, isTransparent_, null,
+                createBrowser(getClient(), windowHandle, getUrl(), true, isTransparent_, null,
                         getRequestContext());
             }
-        } else {
-            // OSR windows cannot be reparented after creation.
+        } else if (hasParent && justCreated_) {
+            notifyAfterParentChanged();
             setFocus(true);
+            justCreated_ = false;
         }
+    }
+
+    private void notifyAfterParentChanged() {
+        // With OSR there is no native window to reparent but we still need to send the
+        // notification.
+        getClient().onAfterParentChanged(this);
     }
 
     @Override
@@ -223,20 +278,21 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     public void injectMouseMove(int x, int y, int mods, boolean left) {
         //FIXME: 'left' is not used as it causes bugs since MCEF 1.11
 
-        MouseEvent ev = new MouseEvent(dc_, MouseEvent.MOUSE_MOVED, 0, mods, x, y, 0, false);
+        MouseEvent ev = new MouseEvent(dc_, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), mods, x, y, 0, false);
         lastMouseEvent = ev;
         sendMouseEvent(ev);
     }
 
     @Override
     public void injectMouseButton(int x, int y, int mods, int btn, boolean pressed, int ccnt) {
-        MouseEvent ev = new MouseEvent(dc_, pressed ? MouseEvent.MOUSE_PRESSED : MouseEvent.MOUSE_RELEASED, 0, mods, x, y, ccnt, false, btn);
+        MouseEvent ev = new MouseEvent(dc_, pressed ? MouseEvent.MOUSE_PRESSED : MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), mods, x, y, ccnt, false, btn);
         sendMouseEvent(ev);
     }
 
+    private Field scancodeFd = null;
     @Override
-    public void injectKeyTyped(char c, int mods) {
-        KeyEvent ev = new KeyEvent(dc_, KeyEvent.KEY_TYPED, 0, mods, 0, c);
+    public void injectKeyTyped(char c, int key_code, int mods) {
+        KeyEvent ev = new KeyEvent(dc_, KeyEvent.KEY_TYPED, System.currentTimeMillis(), mods, key_code, c);
         sendKeyEvent(ev);
     }
 
@@ -282,13 +338,13 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
             }
         }
 
-        KeyEvent ev = new KeyEvent(dc_, KeyEvent.KEY_RELEASED, 0, mods, remapKeycode(keyCode, c), c);
+        KeyEvent ev = new KeyEvent(dc_, KeyEvent.KEY_RELEASED, System.currentTimeMillis(), mods, remapKeycode(keyCode, c), c);
         sendKeyEvent(ev);
     }
 
     @Override
     public void injectMouseWheel(int x, int y, int mods, int amount, int rot) {
-        MouseWheelEvent ev = new MouseWheelEvent(dc_, MouseEvent.MOUSE_WHEEL, 0, mods, x, y, 0, false, MouseWheelEvent.WHEEL_UNIT_SCROLL, amount, rot);
+        MouseWheelEvent ev = new MouseWheelEvent(dc_, MouseEvent.MOUSE_WHEEL, System.currentTimeMillis(), mods, x, y, 0, false, MouseWheelEvent.WHEEL_UNIT_SCROLL, amount, rot);
         sendMouseWheelEvent(ev);
     }
 
