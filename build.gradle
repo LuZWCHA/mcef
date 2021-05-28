@@ -52,10 +52,10 @@ task apiJar(type: Jar) {
     from sourceSets.main.output
     classifier = 'api'
 	
-	manifest {
-        attributes 'FMLCorePlugin': 'net.montoyo.mcef.coremod.ShutdownPatcher'
-        attributes 'FMLCorePluginContainsMod': 'true'
-    }
+//	manifest {
+//        attributes 'FMLCorePlugin': 'net.montoyo.mcef.coremod.ShutdownPatcher'
+//        attributes 'FMLCorePluginContainsMod': 'true'
+//    }
 }
 
 //Generate coremod JAR

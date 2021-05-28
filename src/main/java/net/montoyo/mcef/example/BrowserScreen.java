@@ -200,7 +200,6 @@ public class BrowserScreen extends GuiScreen {
                     }else{
                         btn_ = MouseEvent.BUTTON2;
                     }
-                    System.out.println(btn);
                     browser.injectMouseButton(sx, y, 0, btn_, pressed, 1);
 
                 }

@@ -32,12 +32,12 @@ public interface IDisplayHandler {
      */
     void onStatusMessage(IBrowser browser, String value);
 
-    /**
-     * Called when the browser receives a cursor change message.
-     *
-     * @param browser The browser generating the event.
-     * @param value Contains the cursor id that will be draw.
-     */
-    void onCursorChange(IBrowser browser, String value);
+//    /**
+//     * Called when the browser receives a cursor change message.
+//     *
+//     * @param browser The browser generating the event.
+//     * @param value Contains the cursor id that will be draw.
+//     */
+//    void onCursorChange(IBrowser browser, String value);
 
 }

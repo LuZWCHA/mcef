@@ -7,6 +7,11 @@ It is based on JCEF (https://code.google.com/p/javachromiumembedded/), which is 
 1. Update the lib java-cef to the latest commit.
 2. Fix some BUGs.
 3. To render the page in Mian Frame when LEFT-CLICK(Jcef not support it when ORS mode).
-4. TODO: update to height version of Minecraft...
+4. Render screens by PBO.
+5. TODO: update to height version of Minecraft ...
+
+
+----
+![screenshot](https://gitee.com/nowandfuture/Pic/raw/master/img/20210529031311.jpg)
 
 

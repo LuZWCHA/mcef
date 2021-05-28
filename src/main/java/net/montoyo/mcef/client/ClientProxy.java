@@ -21,7 +21,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.SplashProgress;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
-import net.montoyo.mcef.coremod.ShutdownPatcher;
 import net.montoyo.mcef.api.IScheme;
 import net.montoyo.mcef.utilities.ForgeProgressListener;
 import net.montoyo.mcef.utilities.IProgressListener;
@@ -276,10 +275,10 @@ public class ClientProxy extends BaseProxy {
         cefClient.addMessageRouter(cefRouter);
         cefClient.addDisplayHandler(displayHandler);
 
-        if(!ShutdownPatcher.didPatchSucceed()) {
-            Log.warning("ShutdownPatcher failed to patch Minecraft.run() method; starting ShutdownThread...");
-            (new ShutdownThread()).start();
-        }
+//        if(!ShutdownPatcher.didPatchSucceed()) {
+//            Log.warning("ShutdownPatcher failed to patch Minecraft.run() method; starting ShutdownThread...");
+//            (new ShutdownThread()).start();
+//        }
 
         MinecraftForge.EVENT_BUS.register(this);
         if(MCEF.ENABLE_EXAMPLE)

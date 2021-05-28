@@ -66,7 +66,7 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
             CefRequestContext context, CefBrowserOsr parent, Point inspectAt) {
         super(client, url, context, parent, inspectAt);
         isTransparent_ = transparent;
-        renderer_ = new CefRenderer(transparent);
+        renderer_ = new CefPBORenderer(transparent);
     }
 
     @Override
@@ -88,7 +88,6 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     @Override
     public CompletableFuture<BufferedImage> createScreenshot(boolean nativeResolution) {
-        //todo create the screenshot by catch the buffer
         return null;
     }
 
@@ -189,6 +188,7 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
         sendMouseEvent(lastMouseEvent);
     }
 
+
     @Override
     public boolean onCursorChange(CefBrowser browser, final int cursorType) {
         // OSR always handles the cursor change.
@@ -271,7 +271,7 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     @Override
     public int getTextureID() {
-        return renderer_.texture_id_[0];
+        return renderer_.getTextureId();
     }
 
     @Override
@@ -289,7 +289,6 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
         sendMouseEvent(ev);
     }
 
-    private Field scancodeFd = null;
     @Override
     public void injectKeyTyped(char c, int key_code, int mods) {
         KeyEvent ev = new KeyEvent(dc_, KeyEvent.KEY_TYPED, System.currentTimeMillis(), mods, key_code, c);

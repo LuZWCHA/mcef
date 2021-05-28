@@ -6,25 +6,26 @@
 
 package org.cef.browser;
 
-import java.awt.Rectangle;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.utilities.Log;
 import org.lwjgl.opengl.EXTBgra;
 
+import java.awt.*;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+
 import static org.lwjgl.opengl.GL11.*;
 
-public class CefRenderer {
+public class CefPBORenderer extends CefRenderer{
 
     //montoyo: debug tool
     private static final ArrayList<Integer> GL_TEXTURES = new ArrayList<>();
+    private long id = 0;
+
     public static void dumpVRAMLeak() {
         Log.info(">>>>> MCEF: Beginning VRAM leak report");
         GL_TEXTURES.forEach(tex -> Log.warning(">>>>> MCEF: This texture has not been freed: " + tex));
@@ -32,15 +33,16 @@ public class CefRenderer {
     }
 
     private boolean transparent_;
-    private int[] texture_id_ = new int[1];
+//    private int[] texture_id_ = new int[1];
     private int view_width_ = 0;
     private int view_height_ = 0;
     private Rectangle popup_rect_ = new Rectangle(0, 0, 0, 0);
     private Rectangle original_popup_rect_ = new Rectangle(0, 0, 0, 0);
+    private PBOFrameTexture pboFrameTexture;
 
-    protected CefRenderer(boolean transparent) {
-        transparent_ = transparent;
-        initialize();
+    protected CefPBORenderer(boolean transparent) {
+        super(transparent);
+
     }
 
     protected boolean isTransparent() {
@@ -49,25 +51,16 @@ public class CefRenderer {
 
     @SuppressWarnings("static-access")
     protected void initialize() {
-        GlStateManager.enableTexture2D();
-        texture_id_[0] = glGenTextures();
-
-        if(MCEF.CHECK_VRAM_LEAK)
-            GL_TEXTURES.add(texture_id_[0]);
-
-        GlStateManager.bindTexture(texture_id_[0]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-        GlStateManager.bindTexture(0);
+        //do nothing
     }
 
     protected void cleanup() {
-        if(texture_id_[0] != 0) {
-            if(MCEF.CHECK_VRAM_LEAK)
-                GL_TEXTURES.remove((Object) texture_id_[0]);
 
-            glDeleteTextures(texture_id_[0]);
+        if(pboFrameTexture != null)
+            pboFrameTexture.deleteGlTexture();
+        if(pboFrameTexture != null && pboFrameTexture.getGlTextureId() != 0) {
+            if(MCEF.CHECK_VRAM_LEAK)
+                GL_TEXTURES.remove((Object) pboFrameTexture.getGlTextureId());
         }
     }
 
@@ -78,7 +71,7 @@ public class CefRenderer {
         Tessellator t = Tessellator.getInstance();
         BufferBuilder vb = t.getBuffer();
 
-        GlStateManager.bindTexture(texture_id_[0]);
+        GlStateManager.bindTexture(pboFrameTexture.getGlTextureId());
         vb.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
         vb.pos(x1, y1, 0.0).tex(0.0, 1.0).color(255, 255, 255, 255).endVertex();
         vb.pos(x2, y1, 0.0).tex(1.f, 1.f).color(255, 255, 255, 255).endVertex();
@@ -129,9 +122,14 @@ public class CefRenderer {
             return;
         }
 
+        if(pboFrameTexture == null)
+            pboFrameTexture = new PBOFrameTexture(width, height);
+            if(MCEF.CHECK_VRAM_LEAK && pboFrameTexture.getGlTextureId() != 0)
+                GL_TEXTURES.add(pboFrameTexture.getGlTextureId());
+
         // Enable 2D textures.
         GlStateManager.enableTexture2D();
-        GlStateManager.bindTexture(texture_id_[0]);
+        GlStateManager.bindTexture(pboFrameTexture.getGlTextureId());
 
         int oldAlignement = glGetInteger(GL_UNPACK_ALIGNMENT);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -141,7 +139,12 @@ public class CefRenderer {
                 // Update/resize the whole texture.
                 view_width_ = width;
                 view_height_ = height;
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view_width_, view_height_, 0, EXTBgra.GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+
+                pboFrameTexture.setHeight(height);
+                pboFrameTexture.setWidth(width);
+
+                pboFrameTexture.updateBuffer(buffer, id ++);
+//                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view_width_, view_height_, 0, EXTBgra.GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
             } else {
                 glPixelStorei(GL_UNPACK_ROW_LENGTH, view_width_);
 
@@ -152,7 +155,8 @@ public class CefRenderer {
                     else {
                         glPixelStorei(GL_UNPACK_SKIP_PIXELS, rect.x);
                         glPixelStorei(GL_UNPACK_SKIP_ROWS, rect.y);
-                        glTexSubImage2D(GL_TEXTURE_2D, 0, rect.x, rect.y, rect.width, rect.height, EXTBgra.GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+                        pboFrameTexture.subBuffer(buffer, rect.x, rect.y, rect.width, rect.height, id++);
+//                        glTexSubImage2D(GL_TEXTURE_2D, 0, rect.x, rect.y, rect.width, rect.height, EXTBgra.GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
                     }
                 }
 
@@ -184,7 +188,8 @@ public class CefRenderer {
             glPixelStorei(GL_UNPACK_ROW_LENGTH, width);
             glPixelStorei(GL_UNPACK_SKIP_PIXELS, skip_pixels);
             glPixelStorei(GL_UNPACK_SKIP_ROWS, skip_rows);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, EXTBgra.GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+            pboFrameTexture.subBuffer(buffer,  x, y, w, h, id ++);
+//            glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, EXTBgra.GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
             glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
             glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
             glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
@@ -202,7 +207,10 @@ public class CefRenderer {
         return view_height_;
     }
 
+    @Override
     public int getTextureId() {
-        return texture_id_[0];
+        if(pboFrameTexture == null)
+            return 0;
+        return pboFrameTexture.getGlTextureId();
     }
 }
