@@ -47,8 +47,6 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
     }
 
     public void onInit() {
-
-
         //Register key binding and listen to the FML event bus for ticks.
         ClientRegistry.registerKeyBinding(key);
         MinecraftForge.EVENT_BUS.addListener(this::onTick);

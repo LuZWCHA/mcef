@@ -1,6 +1,6 @@
 # MCEF
-This is a fork from MCEF-1.12.2 for Minecraft 1.16.5
-Too many changes so I didn't fork but restart the source
+This is a fork from MCEF-1.12.2 for Minecraft 1.16.5.
+Too many changes so I didn't fork but restart the source.
 
 ## Update
 1. See the version 1.12.2 Updates;

@@ -81,7 +81,6 @@ public class ClientProxy extends BaseProxy {
 
     @Override
     public void onPreInit() {
-        ClientRegistry.registerKeyBinding(key);
         exampleMod = new ExampleMod();
         exampleMod.onPreInit();
     }
@@ -92,8 +91,9 @@ public class ClientProxy extends BaseProxy {
     //montoyo never provide the download source for the latest libs, I remove the codes now
     @Override
     public void onInit() {
+        ClientRegistry.registerKeyBinding(key);
 
-        // CefApp CefClient should init at minecraft main thread
+        // CefApp CefClient should init at minecraft's main thread
         Runnable runnable = () -> {
             appHandler.setArgs(MCEF.CEF_ARGS);
 
@@ -172,6 +172,7 @@ public class ClientProxy extends BaseProxy {
             settings.background_color = settings.new ColorType(0, 255, 255, 255);
             settings.locales_dir_path = (new File(ROOT, "MCEFLocales")).getAbsolutePath();
             settings.cache_path = (new File(ROOT, "MCEFCache")).getAbsolutePath();
+            settings.browser_subprocess_path = subproc.getAbsolutePath();
             //For debug, to make the log effective I left it...
             settings.log_severity = CefSettings.LogSeverity.LOGSEVERITY_VERBOSE;
 

@@ -67,11 +67,12 @@ public class MCEF {
     }
 
     public void commonSetup(FMLCommonSetupEvent event) {
-        Log.info("Now initializing MCEF v%s...", VERSION);
+        Log.info("Now commonSetup MCEF v%s...", VERSION);
         PROXY.onPreInit();
     }
 
     public void loadComplete(FMLLoadCompleteEvent ev) {
+        Log.info("Now loadComplete MCEF v%s...", VERSION);
         PROXY.onInit();
     }
 
