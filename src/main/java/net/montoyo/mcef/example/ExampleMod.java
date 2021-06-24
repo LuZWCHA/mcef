@@ -1,9 +1,11 @@
 package net.montoyo.mcef.example;
 
+import javafx.scene.Cursor;
+import javafx.scene.ImageCursor;
+import javafx.scene.image.Image;
 import net.minecraftforge.common.MinecraftForge;
 import net.montoyo.mcef.utilities.Log;
 import org.lwjgl.LWJGLException;
-import org.lwjgl.input.Cursor;
 import org.lwjgl.input.Keyboard;
 
 import net.minecraft.client.Minecraft;
@@ -23,6 +25,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.lwjgl.input.Mouse;
+
+import java.awt.image.DataBufferByte;
 
 /**
  * An example mod that shows you how to use MCEF.
@@ -142,6 +146,7 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
 ////                e.printStackTrace();
 ////            }
 ////        }
+//
 //    }
 
     @Override

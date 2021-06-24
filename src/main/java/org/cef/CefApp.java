@@ -563,7 +563,8 @@ public class CefApp extends CefAppHandlerAdapter {
      * @return The path to the jcef library
      */
     private static final String getJcefLibPath() {
-        String library_path = System.getProperty("java.library.path");
+        //modified by nowandfuture
+        String library_path = System.getProperty("jcef.library.path");
         String[] paths = library_path.split(System.getProperty("path.separator"));
         for (String path : paths) {
             File dir = new File(path);

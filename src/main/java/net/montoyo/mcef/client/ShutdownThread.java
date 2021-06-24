@@ -25,8 +25,6 @@ public class ShutdownThread extends Thread {
             
             for(Field f: fields) {
                 if(f.getType().equals(Boolean.TYPE)) {
-                    //Log.info("Minecraft.%s: %s", f.getName(), Modifier.toString(f.getModifiers()));
-
                     if(f.getModifiers() == Modifier.VOLATILE) {
                         f.setAccessible(true);
                         running = f;

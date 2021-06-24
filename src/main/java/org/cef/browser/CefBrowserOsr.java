@@ -6,7 +6,6 @@
 
 package org.cef.browser;
 
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.IStringVisitor;
@@ -15,25 +14,17 @@ import net.montoyo.mcef.client.StringVisitor;
 import net.montoyo.mcef.utilities.Log;
 import org.cef.CefClient;
 import org.cef.DummyComponent;
-import org.cef.OS;
 import org.cef.callback.CefDragData;
 import org.cef.handler.CefRenderHandler;
 import org.cef.handler.CefScreenInfo;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.input.Cursor;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.Display;
-import sun.reflect.Reflection;
 
-import java.awt.Component;
-import java.awt.Point;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -191,7 +182,8 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     @Override
     public boolean onCursorChange(CefBrowser browser, final int cursorType) {
-        // OSR always handles the cursor change.
+        // TODO(JCEF) Prepared for JNA using OSR mode.
+
         return true;
     }
 

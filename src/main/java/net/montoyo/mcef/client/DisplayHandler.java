@@ -56,7 +56,7 @@ public class DisplayHandler implements CefDisplayHandler {
                     break;
 
                 case CURSOR_CHANGE:
-                    //idh.onCursorChange((CefBrowserOsr) browser, data);
+//                    idh.onCursorChange((CefBrowserOsr) browser, data);
                     break;
             }
         }

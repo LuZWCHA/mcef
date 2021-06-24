@@ -68,8 +68,8 @@ public class RemoteConfig {
      * @return The parsed configuration file.
      */
     private JsonObject readConfig() {
-        File newCfg = new File(ClientProxy.ROOT, "mcef2.new");
-        File cfgFle = new File(ClientProxy.ROOT, "mcef2.json");
+        File newCfg = new File(ClientProxy.JCEF_ROOT, "mcef2.new");
+        File cfgFle = new File(ClientProxy.JCEF_ROOT, "mcef2.json");
         
         boolean ok = Util.download("config2.json", newCfg, null);
 
