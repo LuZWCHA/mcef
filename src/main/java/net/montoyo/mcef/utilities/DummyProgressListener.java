@@ -9,6 +9,11 @@ package net.montoyo.mcef.utilities;
 public class DummyProgressListener implements IProgressListener {
 
     @Override
+    public void onError(String task, Throwable d) {
+
+    }
+
+    @Override
     public void onProgressed(double d) {
     }
 

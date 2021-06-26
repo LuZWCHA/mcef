@@ -51,6 +51,11 @@ public class UpdateFrame extends JFrame implements IProgressListener {
     }
 
     @Override
+    public void onError(String task, Throwable d) {
+
+    }
+
+    @Override
     public void onProgressed(double d) {
         int val = (int) Util.clamp(d, 0.d, 100.d);
         pbar.setValue(val);

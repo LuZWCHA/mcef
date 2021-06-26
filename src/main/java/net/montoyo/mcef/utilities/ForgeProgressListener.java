@@ -14,6 +14,11 @@ public class ForgeProgressListener implements IProgressListener {
     }
 
     @Override
+    public void onError(String task, Throwable d) {
+
+    }
+
+    @Override
     public void onProgressed(double d) {
         stepUntil((int) Util.clamp(d, 0.d, 100.d));
     }

@@ -12,7 +12,12 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoader;
+import net.minecraftforge.fml.ModLoadingException;
+import net.minecraftforge.fml.ModWorkManager;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.loading.progress.StartupMessageManager;
 import net.montoyo.mcef.BaseProxy;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.IBrowser;
@@ -34,11 +39,14 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +54,7 @@ public class ClientProxy extends BaseProxy {
 
     // TODO: 2021/6/7 I will modify the way of loading Libraries, for example, moving the libs to java lib path
     public static String ROOT = ".";
+    public static String JCEF_ROOT = ".";
     public static boolean VIRTUAL = false;
 
     private CefApp cefApp;
@@ -79,19 +88,64 @@ public class ClientProxy extends BaseProxy {
 
     public static final String LINUX_WIKI = "https://montoyo.net/wdwiki/Linux";
 
+    private boolean checkFiles() {
+
+        return false;
+    }
+
+    private List<String> downloadSourceInfo(){
+
+        return null;
+    }
+
+    private boolean downloadSources(){
+
+        return true;
+    }
+
+
     @Override
     public void onPreInit() {
         exampleMod = new ExampleMod();
         exampleMod.onPreInit();
+//        Optional<Consumer<String>> mcLoaderConsumer = StartupMessageManager.mcLoaderConsumer();
+//
+//        mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start check libraries"));
+//
+//        if(checkFiles()){
+//
+//            return;
+//        }
+//
+//        mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start collect download source list."));
+//
+//        List<String> infos = downloadSourceInfo();
+//
+//        mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start download lib files."));
+//
+//        if(!downloadSources()){
+//            mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: download failed, go to Virtual mode."));
+//            VIRTUAL = true;
+//            return;
+//        }
+//
+//        if(!checkFiles()){
+//            mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: files check invaild, go to Virtual mode."));
+//            VIRTUAL = true;
+//        }
+
     }
 
     //to improve the fps of minecraft, I add the way to limit the browser's fps by skip some message-loops
-    private final KeyBinding key = new KeyBinding("FPS proportion", GLFW.GLFW_KEY_HOME, "key.categories.ui");
+    private final KeyBinding key = new KeyBinding("Browser FPS proportion", GLFW.GLFW_KEY_HOME, "key.categories.ui");
 
-    //montoyo never provide the download source for the latest libs, I remove the codes now
+    //montoyo never provide the downloadable source for the latest libs, I removed the codes
+    //for the new source's version of CEF and java-cef see my mcef-1.12.2 fork's branch
     @Override
     public void onInit() {
         ClientRegistry.registerKeyBinding(key);
+
+        // TODO: 2021/6/8 download the libs now
 
         // CefApp CefClient should init at minecraft's main thread
         Runnable runnable = () -> {
@@ -105,32 +159,25 @@ public class ClientProxy extends BaseProxy {
             if (ROOT.endsWith("/"))
                 ROOT = ROOT.substring(0, ROOT.length() - 1);
 
-            Log.info("Now adding \"%s\" to java.library.path", ROOT);
+            JCEF_ROOT = ROOT + "/" + "jcef";
+            if(!Files.exists(Paths.get(JCEF_ROOT))){
+                try {
+                    Files.createDirectories(Paths.get(JCEF_ROOT));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    VIRTUAL = true;
+                }
+            }
+
+            Log.info("Now adding \"%s\" to jcef.library.path", JCEF_ROOT);
 
             boolean success = false;
-            String mcDataFile = mc.gameDirectory.getPath();
-            String libraryPath = ROOT;
-            if (OS.isWindows()) {
-                success = Util.addPath2JavaLibPath4WinJava78(ROOT);
-            } else if (OS.isLinux()) {
-                success = Util.addPath2JavaLibPath4LinuxJava78(ROOT, mcDataFile);
-            } else if (OS.isMacintosh()) {
-                libraryPath = Paths.get(ROOT, "Jcef").toString();
-                final String jdk7Path = "DYLD_LIBRARY_PATH",
-                        jdk8Path = "JAVA_LIBRARY_PATH";
-                String libPathKey = null;
-                String jdkVersion = System.getProperty("java.specification.version");
-                if ("1.8".equals(jdkVersion)) {
-                    libPathKey = jdk8Path;
-                } else if ("1.7".equals(jdkVersion)) {
-                    libPathKey = jdk7Path;
-                }
-                success = Util.addPath2JavaLibPath(libraryPath, libPathKey);
-            }
+            String libraryPath = JCEF_ROOT;
+            success = Util.addPath2JcefLibPath(JCEF_ROOT);
 
             if (!success) {
                 VIRTUAL = true;
-                Log.warning("Failed to add \"%s\" to java.library.path", libraryPath);
+                Log.warning("Failed to add \"%s\" to jcef.library.path", libraryPath);
                 return;
             }
 
@@ -144,7 +191,7 @@ public class ClientProxy extends BaseProxy {
             else
                 exeSuffix = "";
 
-            File subproc = new File(ROOT, "jcef_helper" + exeSuffix);
+            File subproc = new File(JCEF_ROOT, "jcef_helper" + exeSuffix);
             if (OS.isLinux() && !subproc.canExecute()) {
                 try {
                     int retCode = Runtime.getRuntime().exec(new String[]{"/usr/bin/chmod", "+x", subproc.getAbsolutePath()}).waitFor();
@@ -170,21 +217,21 @@ public class ClientProxy extends BaseProxy {
             CefSettings settings = new CefSettings();
             settings.windowless_rendering_enabled = true;
             settings.background_color = settings.new ColorType(0, 255, 255, 255);
-            settings.locales_dir_path = (new File(ROOT, "MCEFLocales")).getAbsolutePath();
-            settings.cache_path = (new File(ROOT, "MCEFCache")).getAbsolutePath();
+            settings.locales_dir_path = (new File(JCEF_ROOT, "MCEFLocales")).getAbsolutePath();
+            settings.cache_path = (new File(JCEF_ROOT, "MCEFCache")).getAbsolutePath();
             settings.browser_subprocess_path = subproc.getAbsolutePath();
-            //For debug, to make the log effective I left it...
+            //For debug, to make the log effective I leave it here...
             settings.log_severity = CefSettings.LogSeverity.LOGSEVERITY_VERBOSE;
 
             try {
                 ArrayList<String> libs = new ArrayList<>();
 
                 if (OS.isWindows()) {
-                    //these libs is option
+                    //these libs are options
                     libs.add("d3dcompiler_47.dll");
                     libs.add("libGLESv2.dll");
                     libs.add("libEGL.dll");
-                    //requited by windows CEF
+                    //required by windows CEF
                     libs.add("chrome_elf.dll");
                     libs.add("libcef.dll");
                     //add jcef
@@ -205,7 +252,7 @@ public class ClientProxy extends BaseProxy {
                 }
 
                 for (String lib : libs) {
-                    File f = new File(ROOT, lib);
+                    File f = new File(JCEF_ROOT, lib);
                     try {
                         f = f.getCanonicalFile();
                     } catch (IOException ex) {
@@ -241,8 +288,8 @@ public class ClientProxy extends BaseProxy {
             cefClient.addMessageRouter(cefRouter);
             cefClient.addDisplayHandler(displayHandler);
 
-            if (MCEF.SHUTDOWN_JCEF)
-                (new ShutdownThread()).start();
+//            if (MCEF.SHUTDOWN_JCEF)
+            (new ShutdownThread()).start();
             MinecraftForge.EVENT_BUS.addListener(ClientProxy.this::onTick);
             MinecraftForge.EVENT_BUS.addListener(ClientProxy.this::onLogin);
 

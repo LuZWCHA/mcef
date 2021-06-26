@@ -5,6 +5,7 @@ import net.montoyo.mcef.remote.Mirror;
 import net.montoyo.mcef.remote.MirrorManager;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 import javax.swing.*;
 import java.io.*;
 import java.lang.reflect.Field;
@@ -27,6 +28,7 @@ public class Util {
 
     private static final DummyProgressListener DPH = new DummyProgressListener();
     private static final String HEX = "0123456789abcdef";
+    public static SSLSocketFactory SSL_SOCKET_FACTORY;
 
     /**
      * Clamps d between min and max.
@@ -175,6 +177,7 @@ public class Util {
                 is = new GZIPInputStream(sis);
             } catch (IOException e) {
                 Log.error("Couldn't create GZIPInputStream: IOException.");
+                ph.onError(dst.getName(), new Throwable("Couldn't create GZIPInputStream: IOException."));
                 e.printStackTrace();
                 close(sis);
                 return false;
@@ -190,6 +193,7 @@ public class Util {
             fos = new FileOutputStream(dst);
         } catch (FileNotFoundException e) {
             Log.error("%s Couldn't open the destination file. Maybe you're missing rights.", err);
+            ph.onError(dst.getName(), new Throwable(String.format("%s Couldn't open the destination file. Maybe you're missing rights.", err)));
             e.printStackTrace();
             close(is);
             return false;
@@ -207,10 +211,11 @@ public class Util {
                 cur += (double) sis.resetLengthCounter();
                 ph.onProgressed(cur / total * 100.d);
             }
-
+            ph.onProgressEnd();
             return true;
         } catch (IOException e) {
             Log.error("%s IOException while downloading.", err);
+            ph.onError(dst.getName(), new Throwable(String.format("%s IOException while downloading.", err)));
             e.printStackTrace();
             return false;
         } finally {
@@ -320,8 +325,8 @@ public class Util {
                 Mirror m = MirrorManager.INSTANCE.getCurrent();
                 conn = m.getResource(res);
 
-                if (conn instanceof HttpsURLConnection && m.usesLetsEncryptCertificate() && MCEF.SSL_SOCKET_FACTORY != null)
-                    ((HttpsURLConnection) conn).setSSLSocketFactory(MCEF.SSL_SOCKET_FACTORY);
+                if (conn instanceof HttpsURLConnection && m.usesLetsEncryptCertificate() && SSL_SOCKET_FACTORY != null)
+                    ((HttpsURLConnection) conn).setSSLSocketFactory(SSL_SOCKET_FACTORY);
             } catch (MalformedURLException e) {
                 Log.error("%s Is the mirror list broken?", err);
                 e.printStackTrace();
@@ -476,7 +481,21 @@ public class Util {
         }
 
         return false;
+    }
 
+    /**
+     * @param path add to a new Property to JVM, so that other Application can get the path
+     * @return success or not
+     */
+    public static boolean addPath2JcefLibPath(String path){
+        try {
+            System.setProperty("jcef.library.path", path);
+        }catch (Exception exception) {
+            exception.printStackTrace();
+            return false;
+        }
+
+        return path.equals(System.getProperty("jcef.library.path"));
     }
 
 }

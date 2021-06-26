@@ -2,9 +2,12 @@ package net.montoyo.mcef;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -18,6 +21,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.montoyo.mcef.client.ClientProxy;
 import net.montoyo.mcef.example.BrowserScreen;
 import net.montoyo.mcef.utilities.Log;
+import net.montoyo.mcef.utilities.Util;
 import org.lwjgl.glfw.GLFW;
 
 import javax.net.ssl.SSLContext;
@@ -90,24 +94,26 @@ public class MCEF {
     }
 
     //Called by Minecraft.run() if the ShutdownPatcher succeeded
-    public void onMinecraftShutdown(FMLServerStoppedEvent ev) {
-        Log.info("Minecraft shutdown hook called!");
-        PROXY.onShutdown();
+    public void onMinecraftShutdown(WorldEvent.Unload ev) {
+        System.out.println("Minecraft stopping...");
+        if(ev.getWorld() instanceof World) {
+            Log.info("Minecraft shutdown hook called!");
+            PROXY.onShutdown();
+        }
     }
 
     public void onLoad(final ModConfig.Loading configEvent) {
         //update the config
         importLetsEncryptCertificate();
+        //set the ssl factory if needed
+        //Util.SSL_SOCKET_FACTORY = SSL_SOCKET_FACTORY;
         loadConfig();
-
     }
 
     public void onReload(final ModConfig.Reloading configEvent) {
         //update the config
         loadConfig();
     }
-
-
 
     //This is needed, otherwise for some reason HTTPS doesn't work
     private static void importLetsEncryptCertificate() {

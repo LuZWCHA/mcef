@@ -6,6 +6,12 @@ package net.montoyo.mcef.utilities;
  *
  */
 public interface IProgressListener {
+
+    /**
+     * Call this when the current task crash.
+     * @param d The current task progress in percent.
+     */
+    public void onError(String task, Throwable d);
     
     /**
      * Call this when the current task progressed.

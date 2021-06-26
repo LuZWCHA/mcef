@@ -1,10 +1,12 @@
 package net.montoyo.mcef.remote;
 
+import com.google.common.collect.Lists;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.utilities.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -20,6 +22,8 @@ public class MirrorManager {
             new Mirror("montoyo.net (non-secure)", "http://montoyo.net/jcef", 0)
     };
 
+    public final List<Mirror> extraMirrors = new ArrayList<>();
+
     /**
      * The unique instance of the MirrorManager
      */
@@ -33,6 +37,22 @@ public class MirrorManager {
         markCurrentMirrorAsBroken();
     }
 
+    public void forceSetCurrent(Mirror mirror){
+        this.current = mirror;
+    }
+
+    public void addExtraMirrors(Mirror... extraMirrors){
+        addExtraMirrors(Lists.newArrayList(extraMirrors));
+    }
+
+    private void addExtraMirrors(List<Mirror> extraMirrors){
+        this.extraMirrors.addAll(extraMirrors);
+    }
+
+    public void clearExtraMirrors(){
+        this.extraMirrors.clear();
+    }
+
     private void reset() {
         mirrors.clear();
 
@@ -40,6 +60,7 @@ public class MirrorManager {
             mirrors.add(new Mirror("user-forced", MCEF.FORCE_MIRROR, Mirror.FLAG_FORCED));
         else {
             ArrayList<Mirror> lst = new ArrayList<>(Arrays.asList(defaultMirrors));
+            lst.addAll(extraMirrors);
 
             //Begin by adding all HTTPS mirrors in a random fashion
             while(!lst.isEmpty()) {
