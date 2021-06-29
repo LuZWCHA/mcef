@@ -1,0 +1,13 @@
+{
+  "package": "com.nowandfuture.mod.mixin",
+  "required": true,
+  "mixins": [
+  ],
+  "client": [
+    "MixinMinecraft"
+  ],
+  "server": [],
+  "compatibilityLevel": "JAVA_8",
+  "minVersion": "0.8",
+  "refmap": "mixins.mcef.refmap.json"
+}

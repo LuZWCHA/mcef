@@ -319,19 +319,19 @@ public class Utils {
 
     public static void main(String[] args) {
 
-        try {
-            Path parent = Paths.get("D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test");
-            collectFiles("D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test", "MD5",
-                    path -> parent.relativize(path).startsWith("MCEFCache"), 2).ifPresent(remoteFiles -> {
-                                try {
-                                    File file = write2ConfigFile(remoteFiles, "win64", "D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test/downloads.json");
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Path parent = Paths.get("D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test");
+//            collectFiles("D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test", "MD5",
+//                    path -> parent.relativize(path).startsWith("MCEFCache"), 2).ifPresent(remoteFiles -> {
+//                                try {
+//                                    File file = write2ConfigFile(remoteFiles, "win64", "D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test/downloads.json");
+//                                } catch (IOException e) {
+//                                    e.printStackTrace();
+//                                }
+//                            });
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
 
     }

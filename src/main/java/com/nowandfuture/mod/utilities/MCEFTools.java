@@ -1,9 +1,7 @@
 package com.nowandfuture.mod.utilities;
 
 import net.montoyo.mcef.MCEF;
-import net.montoyo.mcef.remote.MirrorManager;
 import net.montoyo.mcef.utilities.IProgressListener;
-import org.cef.OS;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -14,7 +12,6 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 public class MCEFTools {
     static String url = "http://share.nowandfuture.top/cef";

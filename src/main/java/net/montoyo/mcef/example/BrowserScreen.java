@@ -330,11 +330,6 @@ public class BrowserScreen extends Screen {
     }
 
     @Override
-    public void removed() {
-        super.removed();
-    }
-
-    @Override
     public boolean keyReleased(int key, int p_223281_2_, int p_223281_3_) {
         boolean consume = super.keyReleased(key, p_223281_2_, p_223281_3_);
         char c = (char) key;

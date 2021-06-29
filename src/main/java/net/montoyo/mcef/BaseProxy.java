@@ -62,6 +62,10 @@ public class BaseProxy implements API {
         return false;
     }
 
+    public void stopActivateBrowser(){
+
+    }
+
     public void onShutdown() {
     }
 

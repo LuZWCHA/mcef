@@ -89,17 +89,14 @@ public class ClientProxy extends BaseProxy {
     public static final String LINUX_WIKI = "https://montoyo.net/wdwiki/Linux";
 
     private boolean checkFiles() {
-
         return false;
     }
 
     private List<String> downloadSourceInfo(){
-
         return null;
     }
 
     private boolean downloadSources(){
-
         return true;
     }
 
@@ -421,6 +418,17 @@ public class ClientProxy extends BaseProxy {
     }
 
     @Override
+    public void stopActivateBrowser() {
+        if (VIRTUAL)
+            return;
+
+        for (CefBrowserOsr b : browsers)
+            b.close();
+
+        browsers.clear();
+    }
+
+    @Override
     public void onShutdown() {
         if (VIRTUAL)
             return;
@@ -428,10 +436,7 @@ public class ClientProxy extends BaseProxy {
         Log.info("Shutting down JCEF...");
         CefBrowserOsr.CLEANUP = false; //Workaround
 
-        for (CefBrowserOsr b : browsers)
-            b.close();
-
-        browsers.clear();
+        stopActivateBrowser();
 
         if (MCEF.CHECK_VRAM_LEAK)
             CefRenderer.dumpVRAMLeak();

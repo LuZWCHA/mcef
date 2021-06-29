@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 
 /**
+ * copy from montoyo
  * A set of functions to log messages into the MCEF log channel.
  * @author montoyo
  *
