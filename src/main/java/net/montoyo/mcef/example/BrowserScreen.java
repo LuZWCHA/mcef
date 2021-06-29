@@ -225,14 +225,6 @@ public class BrowserScreen extends Screen {
             browser.draw(0d, height, width, 20.d); //Don't forget to flip Y axis.
             RenderSystem.enableDepthTest();
         }
-
-        //debug codes
-//        if(minecraft != null && width > 0 && height > 0) {
-//            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-//            int sy = (int) ((y - 20) / (float)height * minecraft.getWindow().getScreenHeight());
-//
-//            drawCenteredString(matrixStack, font, sx + ", " + sy + " (" + minecraft.getWindow().getScreenWidth() + ", " + (minecraft.getWindow().getScreenHeight() - scaleY(20)) + ")", 50, 40, 313);
-//        }
     }
 
     @Override

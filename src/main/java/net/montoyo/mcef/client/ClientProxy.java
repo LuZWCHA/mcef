@@ -1,6 +1,10 @@
 package net.montoyo.mcef.client;
 
 import com.nowandfuture.mod.renderer.gui.FPSGui;
+import com.nowandfuture.mod.utilities.DownloadConfig;
+import com.nowandfuture.mod.utilities.MCEFTools;
+import com.nowandfuture.mod.utilities.RemoteFile;
+import com.nowandfuture.mod.utilities.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.ResourceLocation;
@@ -12,6 +16,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.loading.progress.StartupMessageManager;
 import net.montoyo.mcef.BaseProxy;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.IBrowser;
@@ -19,6 +24,8 @@ import net.montoyo.mcef.api.IDisplayHandler;
 import net.montoyo.mcef.api.IJSQueryHandler;
 import net.montoyo.mcef.api.IScheme;
 import net.montoyo.mcef.example.ExampleMod;
+import net.montoyo.mcef.remote.Mirror;
+import net.montoyo.mcef.remote.MirrorManager;
 import net.montoyo.mcef.utilities.Log;
 import net.montoyo.mcef.utilities.Util;
 import net.montoyo.mcef.virtual.VirtualBrowser;
@@ -36,16 +43,13 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ClientProxy extends BaseProxy {
 
-    // TODO: 2021/6/7 I will modify the way of loading Libraries, for example, moving the libs to java lib path
     public static String ROOT = ".";
     public static String JCEF_ROOT = ".";
     public static boolean VIRTUAL = false;
@@ -79,51 +83,77 @@ public class ClientProxy extends BaseProxy {
     private final AppHandler appHandler = new AppHandler();
     private ExampleMod exampleMod;
 
-    public static final String LINUX_WIKI = "https://montoyo.net/wdwiki/Linux";
-
-    private boolean checkFiles() {
-        return false;
-    }
-
-    private List<String> downloadSourceInfo(){
-        return null;
-    }
-
-    private boolean downloadSources(){
-        return true;
-    }
-
-
     @Override
     public void onPreInit() {
         exampleMod = new ExampleMod();
         exampleMod.onPreInit();
-//        Optional<Consumer<String>> mcLoaderConsumer = StartupMessageManager.mcLoaderConsumer();
-//
-//        mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start check libraries"));
-//
-//        if(checkFiles()){
-//
-//            return;
-//        }
-//
-//        mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start collect download source list."));
-//
-//        List<String> infos = downloadSourceInfo();
-//
-//        mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start download lib files."));
-//
-//        if(!downloadSources()){
-//            mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: download failed, go to Virtual mode."));
-//            VIRTUAL = true;
-//            return;
-//        }
-//
-//        if(!checkFiles()){
-//            mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: files check invaild, go to Virtual mode."));
-//            VIRTUAL = true;
-//        }
 
+        ROOT = mc.gameDirectory.getAbsolutePath().replaceAll("\\\\", "/");
+        if (ROOT.endsWith("."))
+            ROOT = ROOT.substring(0, ROOT.length() - 1);
+
+        // get the root path
+        if (ROOT.endsWith("/"))
+            ROOT = ROOT.substring(0, ROOT.length() - 1);
+
+        JCEF_ROOT = ROOT + "/" + "jcef";
+        if (!Files.exists(Paths.get(JCEF_ROOT))) {
+            try {
+                Files.createDirectories(Paths.get(JCEF_ROOT));
+            } catch (IOException e) {
+                e.printStackTrace();
+                VIRTUAL = true;
+                return;
+            }
+        }
+        boolean success = false;
+
+        //download libraries and config file
+        Optional<Consumer<String>> mcLoaderConsumer = StartupMessageManager.mcLoaderConsumer();
+        Optional<Consumer<String>> modConsumer = StartupMessageManager.modLoaderConsumer();
+        mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start check libraries"));
+        Consumer<String> consumer = mcLoaderConsumer.orElse(Log::info);
+        MirrorManager.INSTANCE.addExtraMirrors(
+                new Mirror("nowandfuture", MCEFTools.getConfigUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE),
+                new Mirror("nowandfuture", MCEFTools.getLibsUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE));
+        Path downloadConfigPath = Paths.get(JCEF_ROOT, MCEFTools.CONFIG_NAME);
+        File file = downloadConfigPath.toFile();
+
+        if (!MCEFTools.checkLocalConfigFile(JCEF_ROOT)) {
+            MCEFTools.prepareConfigsMirror();//push the url to first.
+
+            mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start collect download source list."));
+            file = MCEFTools.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), modConsumer.get());
+        }
+
+        if (file != null && file.exists()) {
+            try {
+                mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: check lib files."));
+                MCEFTools.prepareLibsMirror();//push the url to the first.
+
+                success = MCEFTools.downloadLibFilesBy(file, JCEF_ROOT, DownloadConfig.createDefault(), modConsumer.get());
+                if (!success) {
+                    mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: download failed, go to Virtual mode."));
+                } else {
+                    success = false;
+                    //recheck the files
+                    List<RemoteFile> remoteFileList = Utils.readFromConfigFile(file.getAbsolutePath());
+                    List<RemoteFile> lostFiles = Utils.collectLostFiles(JCEF_ROOT, remoteFileList);
+                    success = lostFiles.isEmpty();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                consumer.accept(e.toString());
+            }
+        } else {
+            mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: download failed, go to Virtual mode."));
+        }
+
+        //failed into virtual mode
+        if (!success) {
+            Log.warning("Libs not satisfied! Go to virtual mode.");
+            VIRTUAL = true;
+        }
     }
 
     //to improve the fps of minecraft, I add the way to limit the browser's fps by skip some message-loops
@@ -135,29 +165,11 @@ public class ClientProxy extends BaseProxy {
     public void onInit() {
         ClientRegistry.registerKeyBinding(key);
 
-        // TODO: 2021/6/8 download the libs now
-
         // CefApp CefClient should init at minecraft's main thread
         Runnable runnable = () -> {
+            if (VIRTUAL) return;
+
             appHandler.setArgs(MCEF.CEF_ARGS);
-
-            ROOT = mc.gameDirectory.getAbsolutePath().replaceAll("\\\\", "/");
-            if (ROOT.endsWith("."))
-                ROOT = ROOT.substring(0, ROOT.length() - 1);
-
-            // get the root path
-            if (ROOT.endsWith("/"))
-                ROOT = ROOT.substring(0, ROOT.length() - 1);
-
-            JCEF_ROOT = ROOT + "/" + "jcef";
-            if(!Files.exists(Paths.get(JCEF_ROOT))){
-                try {
-                    Files.createDirectories(Paths.get(JCEF_ROOT));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    VIRTUAL = true;
-                }
-            }
 
             Log.info("Now adding \"%s\" to jcef.library.path", JCEF_ROOT);
 

@@ -350,7 +350,7 @@ class UtilsTest {
     public static void onAfter() {
     }
 
-    @Test
+//    @Test
     public void testCollection() {
         try {
             Path parent = temPath;
@@ -398,7 +398,7 @@ class UtilsTest {
         }
     }
 
-    @Test
+    //    @Test
     public void testDownloadConfig() throws IOException {
         MCEFTools.prepareConfigsMirror();
         Path downloadConfigPath = Paths.get(temPath.toString(), "downloads.json");
@@ -419,7 +419,7 @@ class UtilsTest {
         Assertions.assertNotNull(file);
     }
 
-    @Test
+    //    @Test
     public void testDownloadLibs() throws IOException {
         MCEFTools.prepareConfigsMirror();
         Path downloadConfigPath = Paths.get(temPath.toString(), "downloads.json");

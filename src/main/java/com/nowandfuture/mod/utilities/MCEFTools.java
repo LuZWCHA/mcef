@@ -6,6 +6,7 @@ import net.montoyo.mcef.utilities.IProgressListener;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
@@ -23,6 +24,14 @@ public class MCEFTools {
 
     public static String getConfigUrl() {
         return url + "/config/" + MCEF.VERSION + "/" + getOSName();
+    }
+
+    public static boolean checkJcefRoot(String root) throws IOException {
+        Path configPath = Paths.get(root);
+        if (!configPath.toFile().exists()) {
+            Files.createDirectories(configPath);
+        }
+        return true;
     }
 
     public static boolean checkLocalConfigFile(String root) {
@@ -98,6 +107,12 @@ public class MCEFTools {
         try {
             List<RemoteFile> remoteFiles = Utils.readFromConfigFile(configFile.getAbsolutePath());
             List<RemoteFile> expFiles = Utils.collectLostFiles(root, remoteFiles);
+            if (expFiles.isEmpty()) {
+                messageConsumer.accept("Lib files are prepared! Skip download step.");
+                return true;
+            } else {
+                messageConsumer.accept(MessageFormat.format("CEF: {0} files to download. Download start... ", expFiles.size()));
+            }
             String url = getLibsUrl();
             int failedCount = Utils.downloadFromSite(url, expFiles, file -> new File(root + '/' + file.getRemotePath()), config, new IProgressListener() {
                 @Override

@@ -19,7 +19,7 @@ apply plugin: 'org.spongepowered.mixin'
 
 version = '2.11'
 group = 'com.nowandfuture.mcef' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = 'mcef'
+archivesBaseName = 'mcef-mc1.16.5'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
 
@@ -105,7 +105,8 @@ test {
 }
 dependencies {
     testCompile 'org.junit.jupiter:junit-jupiter:5.7.0'
-    implementation 'org.spongepowered:mixin:0.8'
+    implementation 'org.spongepowered:mixin:0.8.2'
+    annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
     minecraft 'net.minecraftforge:forge:1.16.5-36.1.0'
 
 //    compile fileTree(dir: 'libs', includes:  ['jcef.jar'])
