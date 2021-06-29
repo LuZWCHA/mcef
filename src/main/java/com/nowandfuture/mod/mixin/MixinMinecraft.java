@@ -1,5 +1,6 @@
 package com.nowandfuture.mod.mixin;
 
+import com.nowandfuture.mod.utilities.Log;
 import net.minecraft.client.Minecraft;
 import net.montoyo.mcef.MCEF;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,11 +13,12 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public abstract class MixinMinecraft {
 
     @Inject(
-            method = "run",
-            at = @At("TAIL"),
-            locals = LocalCapture.CAPTURE_FAILEXCEPTION
+            method = "destroy",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;close()V", shift = At.Shift.AFTER),
+            locals = LocalCapture.CAPTURE_FAILSOFT
     )
     public void run(CallbackInfo callbackInfo) {
+        Log.info("Shutting... CEF!");
         MCEF.PROXY.onShutdown();
     }
 }
