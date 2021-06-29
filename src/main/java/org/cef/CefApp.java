@@ -412,8 +412,8 @@ public class CefApp extends CefAppHandlerAdapter {
                     // Avoid to override user values by testing on NULL
                     if (OS.isMacintosh()) {
                         if (settings.browser_subprocess_path == null) {
-                            Path path = Paths.get(library_path,
-                                    "../Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper");
+                            Path path = Paths.get(library_path,//modified by nowandfuture
+                                    "Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper");
                             settings.browser_subprocess_path =
                                     path.normalize().toAbsolutePath().toString();
                         }
