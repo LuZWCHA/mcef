@@ -30,20 +30,22 @@ public interface IBrowser {
      * @return the OpenGL texture ID of the web view.
      */
     int getTextureID();
-    
+
     /**
      * Simulates a mouse move.
-     * 
-     * @param x The X coord of the mouse.
-     * @param y The Y coord of the mouse.
+     *
+     * @param x    The X coord of the mouse.
+     * @param y    The Y coord of the mouse.
      * @param mods The key modifiers (shift, ctrl, alt)
      * @param left true if the mouse is out of (left) the web view.
      */
     void injectMouseMove(int x, int y, int mods, boolean left);
-    
+
+    void injectMouseDrag(int x, int y, int btn, int dragX, int dragY);
+
     /**
      * Simulates a mouse click.
-     * 
+     *
      * @param x The X coord of the mouse.
      * @param y The Y coord of the mouse.
      * @param mods The key modifiers (shift, ctrl, alt)

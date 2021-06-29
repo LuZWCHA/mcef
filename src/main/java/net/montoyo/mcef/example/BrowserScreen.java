@@ -2,29 +2,18 @@ package net.montoyo.mcef.example;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.java.games.input.Keyboard;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.util.InputMappings;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.client.event.GuiScreenEvent;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.API;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.MCEFApi;
-import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.util.Objects;
-
-import static javafx.scene.paint.Color.color;
 
 public class BrowserScreen extends Screen {
     
@@ -257,9 +246,23 @@ public class BrowserScreen extends Screen {
     @Override
     public boolean charTyped(char key, int code) {
         boolean consume = super.charTyped(key, code);
-        if(browser != null && !consume) {
-            browser.injectKeyTyped(key, code, 0);
+        if (browser != null && !consume) {
+            browser.injectKeyTyped(key, code, getMask());
             return true;
+        }
+
+        return consume;
+    }
+
+    @Override
+    public boolean mouseDragged(double ox, double oy, int btn, double nx, double ny) {
+        boolean consume = super.mouseDragged(ox, oy, btn, nx, ny);
+        if (browser != null && !consume) {
+            int sx = (int) (ox / (float) width * minecraft.getWindow().getScreenWidth());
+            int sy = (int) ((oy - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            int ex = (int) (ox / (float) width * minecraft.getWindow().getScreenWidth());
+            int ey = (int) ((oy - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            browser.injectMouseDrag(sx, sy, remapBtn(btn), ex, ey);
         }
 
         return consume;
@@ -268,34 +271,39 @@ public class BrowserScreen extends Screen {
     @Override
     public void mouseMoved(double x, double y) {
         super.mouseMoved(x, y);
-        if(browser != null && minecraft != null) {
-            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) ((y - 20) / (float)height * minecraft.getWindow().getScreenHeight());
-            browser.injectMouseMove(sx, sy, 0, y < 0);
+        if (browser != null && minecraft != null && activateBtn == -1) {
+            int sx = (int) (x / (float) width * minecraft.getWindow().getScreenWidth());
+            int sy = (int) ((y - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            browser.injectMouseMove(sx, sy, getMask(), y < 0);
         }
     }
 
     @Override
     public boolean mouseClicked(double x, double y, int btn) {
+        activateBtn = btn;
+
         boolean consume = super.mouseClicked(x, y, btn);
-        if(!consume && browser != null && minecraft != null) {
-            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) ((y - 20) / (float)height * minecraft.getWindow().getScreenHeight());
-            browser.injectMouseButton(sx, sy, 0, remapBtn(btn), true, 1);
+        if (!consume && browser != null && minecraft != null) {
+            int sx = (int) (x / (float) width * minecraft.getWindow().getScreenWidth());
+            int sy = (int) ((y - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            browser.injectMouseButton(sx, sy, getMask(), remapBtn(btn), true, 1);
             return true;
         }
 
         return consume;
     }
 
+
+    private int activateBtn = -1;
+
     @Override
     public boolean mouseReleased(double x, double y, int btn) {
+        activateBtn = activateBtn == btn ? -1 : activateBtn;
         boolean consume = super.mouseReleased(x, y, btn);
-
-        if(!consume && browser != null && minecraft != null) {
-            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) ((y - 20) / (float)height * minecraft.getWindow().getScreenHeight());
-            browser.injectMouseButton(sx, sy, 0, remapBtn(btn), false, 1);
+        if (!consume && browser != null && minecraft != null) {
+            int sx = (int) (x / (float) width * minecraft.getWindow().getScreenWidth());
+            int sy = (int) ((y - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            browser.injectMouseButton(sx, sy, getMask(), remapBtn(btn), false, 1);
             return true;
         }
 
@@ -308,7 +316,7 @@ public class BrowserScreen extends Screen {
         if(!consume && browser != null && minecraft != null) {
             int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
             int sy = (int) ((y - 20) / (float)height * minecraft.getWindow().getScreenHeight());
-            browser.injectMouseWheel(sx, sy, 0, 1, ((int) wheel * 100));
+            browser.injectMouseWheel(sx, sy, getMask(), 1, ((int) wheel * 100));
             return true;
         }
         return consume;
@@ -322,7 +330,7 @@ public class BrowserScreen extends Screen {
         char c = (char) keycode;
 
         if(!consume && browser != null) {
-            browser.injectKeyPressedByKeyCode(keycode, c, 0);
+            browser.injectKeyPressedByKeyCode(keycode, c, getMask());
             return true;
         }
 
@@ -334,7 +342,7 @@ public class BrowserScreen extends Screen {
         boolean consume = super.keyReleased(key, p_223281_2_, p_223281_3_);
         char c = (char) key;
         if(browser != null && !consume) {
-            browser.injectKeyReleasedByKeyCode(key, c, 0);
+            browser.injectKeyReleasedByKeyCode(key, c, getMask());
             return true;
         }
         return consume;
@@ -351,23 +359,30 @@ public class BrowserScreen extends Screen {
 
     //remap from GLFW to AWT's button ids
     private int remapBtn(int btn){
-        if(btn == 0){
+        if (btn == 0) {
             btn = MouseEvent.BUTTON1;
-        }else if(btn == 1){
+        } else if (btn == 1) {
             btn = MouseEvent.BUTTON3;
-        }else{
+        } else {
             btn = MouseEvent.BUTTON2;
         }
         return btn;
     }
 
+    private static int getMask() {
+        return (hasShiftDown() ? MouseEvent.SHIFT_DOWN_MASK : 0) |
+                (hasAltDown() ? MouseEvent.ALT_DOWN_MASK : 0) |
+                (hasControlDown() ? MouseEvent.CTRL_DOWN_MASK : 0);
+    }
+
 
     //never used
     private final Point point = new Point();
-    private Point transform2BrowserSize(double x, double y){
-        int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
+
+    private Point transform2BrowserSize(double x, double y) {
+        int sx = (int) (x / (float) width * minecraft.getWindow().getScreenWidth());
         // 20 is the top search box's height
-        int sy = (int) ((y - 20) / (float)height * minecraft.getWindow().getScreenHeight());
+        int sy = (int) ((y - 20) / (float) height * minecraft.getWindow().getScreenHeight());
         point.setLocation(sx, sy);
         return point;
     }

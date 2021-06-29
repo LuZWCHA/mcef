@@ -8,7 +8,6 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -87,7 +86,6 @@ public class MCEF {
 
     //Called by Minecraft.run() if the ShutdownPatcher succeeded
     public void onMinecraftWorldUnload(WorldEvent.Unload ev) {
-        System.out.println("Minecraft stopping...");
         if(ev.getWorld() instanceof World) {
             Log.info("Minecraft shutdown hook called!");
             PROXY.stopActivateBrowser();

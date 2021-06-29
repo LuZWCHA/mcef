@@ -22,11 +22,16 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.dnd.*;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
@@ -176,13 +181,7 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
                 paintData.fullReRender = false;
             }
         }
-
-        //So sadly this is the only way I could get around the "youtube not rendering video if the mouse doesn't move bug"
-        //Even the test browser from the original JCEF library doesn't fix this...
-        //What I hope, however, is that it doesn't redraw the entire browser... otherwise I could just call "invalidate"
-        sendMouseEvent(lastMouseEvent);
     }
-
 
     private long getMCEFWindowsHandler(){
         return Minecraft.getInstance().getWindow().getWindow();
@@ -218,10 +217,41 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
         return true;
     }
 
+    private static final class SyntheticDragGestureRecognizer extends DragGestureRecognizer {
+        public SyntheticDragGestureRecognizer(Component c, int action, MouseEvent triggerEvent) {
+            super(new DragSource(), c, action);
+            appendEvent(triggerEvent);
+        }
+
+        protected void registerListeners() {
+        }
+
+        protected void unregisterListeners() {
+        }
+    }
+
+    ;
+
     @Override
     public boolean startDragging(CefBrowser browser, CefDragData dragData, int mask, int x, int y) {
-        // TODO(JCEF) Prepared for DnD support using OSR mode.
-        return false;
+        int action = (mask & CefDragData.DragOperations.DRAG_OPERATION_MOVE) == 0
+                ? DnDConstants.ACTION_COPY
+                : DnDConstants.ACTION_MOVE;
+        MouseEvent triggerEvent =
+                new MouseEvent(dc_, MouseEvent.MOUSE_DRAGGED, 0, 0, x, y, 0, false);
+        DragGestureEvent ev = new DragGestureEvent(
+                new SyntheticDragGestureRecognizer(dc_, action, triggerEvent), action,
+                new Point(x, y), new ArrayList<>(Collections.singletonList(triggerEvent)));
+
+        DragSource.getDefaultDragSource().startDrag(ev, /*dragCursor=*/null,
+                new StringSelection(dragData.getFragmentText()), new DragSourceAdapter() {
+                    @Override
+                    public void dragDropEnd(DragSourceDropEvent dsde) {
+                        dragSourceEndedAt(dsde.getLocation(), mask);
+                        dragSourceSystemDragEnded();
+                    }
+                });
+        return true;
     }
 
     @Override
@@ -292,15 +322,25 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     @Override
     public void injectMouseMove(int x, int y, int mods, boolean left) {
         //FIXME: 'left' is not used as it causes bugs since MCEF 1.11
-
         MouseEvent ev = new MouseEvent(dc_, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), mods, x, y, 0, false);
         lastMouseEvent = ev;
         sendMouseEvent(ev);
+//        System.out.println("moved:" + x + ", " + y);
     }
+
+    @Override
+    public void injectMouseDrag(int x, int y, int btn, int dragX, int dragY) {
+        MouseEvent ev = new MouseEvent(dc_, MouseEvent.MOUSE_DRAGGED, 0, InputEvent.getMaskForButton(btn), x, y, 1, false, btn);
+        sendMouseEvent(ev);
+
+    }
+
+    int lastBtn = 0;
 
     @Override
     public void injectMouseButton(int x, int y, int mods, int btn, boolean pressed, int ccnt) {
         MouseEvent ev = new MouseEvent(dc_, pressed ? MouseEvent.MOUSE_PRESSED : MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), mods, x, y, ccnt, false, btn);
+        lastBtn = btn;
         sendMouseEvent(ev);
     }
 
@@ -356,7 +396,6 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     public boolean isPageLoading() {
         return isLoading();
     }
-
 
     public static int remapKeycode(int kc, char c) {
         switch(kc) {

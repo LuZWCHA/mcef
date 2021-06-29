@@ -27,6 +27,11 @@ public class VirtualBrowser implements IBrowser {
     }
 
     @Override
+    public void injectMouseDrag(int x, int y, int btn, int dragX, int dragY) {
+
+    }
+
+    @Override
     public void injectMouseButton(int x, int y, int mods, int btn, boolean pressed, int ccnt) {
     }
 
