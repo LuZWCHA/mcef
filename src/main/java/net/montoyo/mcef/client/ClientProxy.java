@@ -268,7 +268,8 @@ public class ClientProxy extends BaseProxy {
         cefClient.addMessageRouter(cefRouter);
         cefClient.addDisplayHandler(displayHandler);
 
-        (new ShutdownThread()).start();
+        if(MCEF.SHUTDOWN_JCEF)
+            (new ShutdownThread()).start();
 
         MinecraftForge.EVENT_BUS.register(this);
         if (MCEF.ENABLE_EXAMPLE)

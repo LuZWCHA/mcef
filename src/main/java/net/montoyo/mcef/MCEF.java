@@ -75,12 +75,6 @@ public class MCEF {
         PROXY.onInit();
     }
 
-    //Called by Minecraft.run() if the ShutdownPatcher succeeded
-    public static void onMinecraftShutdown() {
-        Log.info("Minecraft shutdown hook called!");
-        PROXY.onShutdown();
-    }
-
     //This is needed, otherwise for some reason HTTPS doesn't work
     private static void importLetsEncryptCertificate() {
         try {

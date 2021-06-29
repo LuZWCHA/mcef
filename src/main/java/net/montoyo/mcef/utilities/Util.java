@@ -416,9 +416,9 @@ public class Util {
     }
 
     /**
-     * @param path the java libs path
+     * @param path The java libs' path
      * @param fieldName
-     * @return
+     * @return Success or not
      */
     public static boolean addPath2JavaLibPath(String path, String fieldName) {
         if(fieldName == null)
@@ -446,8 +446,8 @@ public class Util {
     }
 
     /**
-     * @param path add to a new Property to JVM, so that other Application can get the path
-     * @return success or not
+     * @param path Add to a new Property to JVM, so that other Application can get the path
+     * @return Success or not
      */
     public static boolean addPath2JcefLibPath(String path){
         try {
