@@ -172,7 +172,6 @@ public class ClientProxy extends BaseProxy {
 
             appHandler.setArgs(MCEF.CEF_ARGS);
 
-
             Log.info("Now adding \"%s\" to jcef.library.path", JCEF_ROOT);
 
             boolean success = false;
@@ -184,7 +183,6 @@ public class ClientProxy extends BaseProxy {
                 success = Util.addPath2JcefLibPath(JCEF_ROOT + "/jcef_app.app/Contents/Java");
             }
 
-
             if (!success) {
                 VIRTUAL = true;
                 Log.warning("Failed to add \"%s\" to jcef.library.path", libraryPath);
@@ -194,7 +192,6 @@ public class ClientProxy extends BaseProxy {
             Log.info("Done without errors.");
 
             //modify the permission on Linux
-
             String exeSuffix;
             if (OS.isWindows())
                 exeSuffix = ".exe";
@@ -248,10 +245,10 @@ public class ClientProxy extends BaseProxy {
                     libs.add("libjcef.so");
                 } else if (OS.isMacintosh()) {
 
-            /*
-              Chromium Embedded Framework will added at init step.
-              @see CefApp#startup(String[])
-             */
+                /*
+                  Chromium Embedded Framework will added at init step.
+                  @see CefApp#startup(String[])
+                 */
 
                     //add jcef
                     libs.add("libjcef.pylib");
@@ -294,8 +291,9 @@ public class ClientProxy extends BaseProxy {
             cefClient.addMessageRouter(cefRouter);
             cefClient.addDisplayHandler(displayHandler);
 
-//            if (MCEF.SHUTDOWN_JCEF)
-            (new ShutdownThread()).start();
+            if (MCEF.SHUTDOWN_JCEF)
+                (new ShutdownThread()).start();
+
             MinecraftForge.EVENT_BUS.addListener(ClientProxy.this::onTick);
             MinecraftForge.EVENT_BUS.addListener(ClientProxy.this::onLogin);
 
