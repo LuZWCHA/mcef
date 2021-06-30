@@ -18,7 +18,6 @@ public abstract class MixinMinecraft {
             locals = LocalCapture.CAPTURE_FAILSOFT
     )
     private void inject_run(CallbackInfo callbackInfo) {
-        Log.info("Shutting down CEF!");
         MCEF.PROXY.onShutdown();
     }
 }
