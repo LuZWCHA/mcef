@@ -94,7 +94,7 @@ public class ClientProxy extends BaseProxy {
             t.printStackTrace();
         }
 
-        ROOT = mc.mcDataDir.getAbsolutePath().replaceAll("\\\\", "/");
+        ROOT = mc.gameDir.getAbsolutePath().replaceAll("\\\\", "/");
 
         if (ROOT.endsWith("."))
             ROOT = ROOT.substring(0, ROOT.length() - 1);
@@ -339,7 +339,7 @@ public class ClientProxy extends BaseProxy {
     @SubscribeEvent
     public void onTick(TickEvent.RenderTickEvent ev) {
         if (ev.phase == TickEvent.Phase.START) {
-            mc.mcProfiler.startSection("MCEF");
+            mc.profiler.startSection("MCEF");
 
             if (cefApp != null)
                 cefApp.N_DoMessageLoopWork();
@@ -348,7 +348,7 @@ public class ClientProxy extends BaseProxy {
                 b.mcefUpdate();
 
             displayHandler.update();
-            mc.mcProfiler.endSection();
+            mc.profiler.endSection();
         }
     }
 

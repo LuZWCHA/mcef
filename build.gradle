@@ -1,6 +1,10 @@
 buildscript {
     repositories {
         mavenCentral()
+        maven {
+            name = "forge"
+            url = "http://crystal.app.lss233.com/repositories/minecraft"
+        }
         maven { url = "http://files.minecraftforge.net/maven" }
         maven {
             name = 'sponge'
@@ -27,10 +31,10 @@ compileJava {
 }
 
 minecraft {
-    version = "1.12.2-14.23.5.2768"
+    version = "1.12.2-14.23.5.2847"
     runDir = "run"
     clientJvmArgs += "-Dfml.coreMods.load=net.montoyo.mcef.LoadingPlugin"
-    mappings = "snapshot_20171003"
+    mappings = "stable_39"
 }
 
 //MCEF: update Let's Encrypt root certificate before building
@@ -46,104 +50,26 @@ task importLetsEncryptCertificate {
 
 processResources.dependsOn importLetsEncryptCertificate
 
-//MCEF: Generate unobfuscated JAR that can be added to the 'libs' folder
-task apiJar(type: Jar) {
-    from sourceSets.main.output
-    classifier = 'api'
-}
-
-//Generate coremod JAR
-import groovy.swing.SwingBuilder
-
-task coremodJar(type: Jar) {
-
-    classifier = 'coremod'
-    manifest {
-        manifest.attributes([
-                "FMLCorePluginContainsFMLMod": 'true',
-                "FMLCorePlugin": "net.montoyo.mcef.LoadingPlugin",
-                "TweakClass": "org.spongepowered.asm.launch.MixinTweaker"
-        ])
-    }
-    doLast {
-        if(enableSigning) {
-            def keyAlias = ''
-            def keyFile = ''
-            def keyPswd = ''
-            def dstDir = new File(coremodJar.destinationDir, 'signed')
-            dstDir.mkdirs()
-
-            new SwingBuilder().edt {
-                dialog(modal: true,
-                        title: 'Signing details required',
-                        alwaysOnTop: true,
-                        resizable: false,
-                        locationRelativeTo: null,
-                        pack: true,
-                        show: true) {
-                    vbox {
-                        label(text: 'Key File:')
-                        input1 = textField()
-                        label(text: 'Key Alias:')
-                        input2 = textField()
-                        label(text: 'Key Password:')
-                        input3 = passwordField()
-                        button(defaultButton: true, text: 'Sign', actionPerformed: {
-                            keyFile = input1.text
-                            keyAlias = input2.text
-                            keyPswd = new String(input3.password)
-                            dispose()
-                        })
-                    }
-                }
-            }
-
-            ant.signjar(
-                    jar: coremodJar.archivePath.absolutePath,
-                    destDir: dstDir.absolutePath,
-                    alias: keyAlias,
-                    storetype: 'jks',
-                    keystore: keyFile,
-                    storepass: keyPswd,
-                    verbose: true,
-                    preservelastmodified: 'true'
-            )
-        }
-    }
-}
-
-reobf {
-    coremodJar { mappingType = 'SEARGE' }
-}
-
-jar {
-    File signedCoremod
-    if(enableSigning)
-        signedCoremod = new File(new File(coremodJar.destinationDir, 'signed'), coremodJar.archivePath.name)
-    else
-        signedCoremod = coremodJar.archivePath
-
-    from(signedCoremod.absolutePath) {
-        include '*'
-    }
-
-    manifest {
-        attributes 'ContainedDeps': coremodJar.archivePath.name
-        attributes 'Main-Class': 'net.montoyo.mcef.setup.SetupUI'
-    }
-
-    dependsOn reobfCoremodJar
-}
-
-artifacts {
-    archives apiJar
-}
-
 dependencies {
     provided('org.spongepowered:mixin:0.8') {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
+    }
+}
+
+jar {
+    manifest {
+        manifest.attributes([
+                "FMLCorePluginContainsFMLMod": 'true',
+                "FMLCorePlugin"              : "com.nowandfuture.translation.LoadingPlugin",
+                "TweakClass"                 : "org.spongepowered.asm.launch.MixinTweaker"
+
+        ])
+    }
+
+    from configurations.provided.asFileTree.files.collect {
+        zipTree(it)
     }
 }
 
