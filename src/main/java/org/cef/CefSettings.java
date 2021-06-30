@@ -10,6 +10,10 @@ package org.cef;
  * line switches.
  */
 public class CefSettings {
+    //Mac OS needed
+    public String main_bundle_path;
+    public String framework_dir_path;
+
     /**
      * Log severity levels.
      */

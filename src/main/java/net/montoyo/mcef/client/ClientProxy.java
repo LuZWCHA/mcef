@@ -108,7 +108,8 @@ public class ClientProxy extends BaseProxy {
         }
         boolean success = false;
 
-        //download libraries and config file
+        //Check and download libraries && config file
+        if (MCEF.SKIP_UPDATES) return;
         Optional<Consumer<String>> mcLoaderConsumer = StartupMessageManager.mcLoaderConsumer();
         Optional<Consumer<String>> modConsumer = StartupMessageManager.modLoaderConsumer();
         mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start check libraries"));
@@ -171,11 +172,18 @@ public class ClientProxy extends BaseProxy {
 
             appHandler.setArgs(MCEF.CEF_ARGS);
 
+
             Log.info("Now adding \"%s\" to jcef.library.path", JCEF_ROOT);
 
             boolean success = false;
             String libraryPath = JCEF_ROOT;
-            success = Util.addPath2JcefLibPath(JCEF_ROOT);
+            if (!OS.isMacintosh()) {
+                success = Util.addPath2JcefLibPath(JCEF_ROOT);
+            } else {
+                //for mac os the libs are packed into the .app file
+                success = Util.addPath2JcefLibPath(JCEF_ROOT + "/jcef_app.app/Contents/Java");
+            }
+
 
             if (!success) {
                 VIRTUAL = true;
@@ -203,27 +211,23 @@ public class ClientProxy extends BaseProxy {
                 } catch (Throwable t) {
                     Log.errorEx("Error while giving execution rights to jcef_helper. MCEF will probably enter virtual mode. You can fix this by chmoding jcef_helper manually.", t);
                 }
-            } else if (OS.isMacintosh()) {
-                Path path = Paths.get(libraryPath,
-                        "../Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper");
-
-                File file = path.toFile();
-                if (!file.exists()) {
-                    VIRTUAL = true;
-                    Log.warning("Failed to find the Jcef Helper file at " + path);
-                    return;
-                }
-
             }
 
             CefSettings settings = new CefSettings();
             settings.windowless_rendering_enabled = true;
             settings.background_color = settings.new ColorType(0, 255, 255, 255);
-            settings.locales_dir_path = (new File(JCEF_ROOT, "MCEFLocales")).getAbsolutePath();
-            settings.cache_path = (new File(JCEF_ROOT, "MCEFCache")).getAbsolutePath();
-            settings.browser_subprocess_path = subproc.getAbsolutePath();
+
             //For debug, to make the log effective I leave it here...
             settings.log_severity = CefSettings.LogSeverity.LOGSEVERITY_VERBOSE;
+
+            /*
+             *  Mac OS locales_dir_path will init at CefApp#initialize
+             */
+            if (!OS.isMacintosh())
+                settings.locales_dir_path = (new File(JCEF_ROOT, "MCEFLocales")).getAbsolutePath();
+            settings.cache_path = (new File(JCEF_ROOT, "MCEFCache")).getAbsolutePath();
+            if (OS.isLinux())
+                settings.browser_subprocess_path = subproc.getAbsolutePath();
 
             try {
                 ArrayList<String> libs = new ArrayList<>();

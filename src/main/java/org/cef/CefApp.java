@@ -412,10 +412,16 @@ public class CefApp extends CefAppHandlerAdapter {
                     // Avoid to override user values by testing on NULL
                     if (OS.isMacintosh()) {
                         if (settings.browser_subprocess_path == null) {
-                            Path path = Paths.get(library_path,//modified by nowandfuture
-                                    "Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper");
-                            settings.browser_subprocess_path =
-                                    path.normalize().toAbsolutePath().toString();
+                            Path basePath = Paths.get(library_path).getParent().getParent();
+                            settings.main_bundle_path = basePath.toString();
+                            settings.framework_dir_path = basePath
+                                    + "/Contents/Frameworks/Chromium Embedded Framework.framework";
+                            settings.locales_dir_path = basePath
+                                    + "/Contents/Frameworks/Chromium Embedded Framework.framework/Resources";
+                            settings.resources_dir_path = basePath
+                                    + "/Contents/Frameworks/Chromium Embedded Framework.framework/Resources";
+                            settings.browser_subprocess_path = basePath
+                                    + "/Contents/Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper";
                         }
                     } else if (OS.isWindows()) {
                         if (settings.browser_subprocess_path == null) {

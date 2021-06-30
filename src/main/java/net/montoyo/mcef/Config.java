@@ -2,7 +2,6 @@ package net.montoyo.mcef;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.common.Mod;
-import org.lwjgl.system.CallbackI;
 
 @Mod.EventBusSubscriber
 public class Config {
@@ -11,13 +10,11 @@ public class Config {
     public static final String CATEGORY_EXAMPLE_BROWSER = "example_browser";
     public static final String CATEGORY_DEBUG = "debug";
 
-    //    public static final String SUBCATEGORY_FIRSTBLOCK = "firstblock";
     public static ForgeConfigSpec.BooleanValue SKIP_UPDATES;
     public static ForgeConfigSpec.BooleanValue ENABLE_EXAMPLE;
     public static ForgeConfigSpec.BooleanValue WARN_UPDATES;
     public static ForgeConfigSpec.BooleanValue USE_FORGE_SPLASH;
     public static ForgeConfigSpec.IntValue FPS_TAKE_ON;
-//    public static ForgeConfigSpec.ConfigValue<String> FORCE_MIRROR;
     public static ForgeConfigSpec.ConfigValue<String> HOME_PAGE;
     public static ForgeConfigSpec.ConfigValue<String> CEF_ARGS;
     public static ForgeConfigSpec.BooleanValue CHECK_VRAM_LEAK;
@@ -33,8 +30,8 @@ public class Config {
         ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
 
         CLIENT_BUILDER.comment("Main settings").push(CATEGORY_MAIN);
-        SKIP_UPDATES        = CLIENT_BUILDER.comment("Do not update binaries.").define("skipUpdate", true);
-        WARN_UPDATES        = CLIENT_BUILDER.comment("Tells in the chat if a new version of MCEF is available.").define("warnUpdate", true);
+        SKIP_UPDATES = CLIENT_BUILDER.comment("Do not update binaries.").define("skipUpdate", false);
+        WARN_UPDATES = CLIENT_BUILDER.comment("Tells in the chat if a new version of MCEF is available.").define("warnUpdate", true);
         USE_FORGE_SPLASH    = CLIENT_BUILDER.comment("Use Forge's splash screen to display resource download progress (may be unstable).").define("useForgeSplash", true);
         CEF_ARGS            = CLIENT_BUILDER.comment("Command line arguments passed to CEF. For advanced users.").define("cefArgs", "--disable-gpu");
         SHUTDOWN_JCEF       = CLIENT_BUILDER.comment("Set this to true if your Java process hangs after closing Minecraft. This is disabled by default because it makes the launcher think Minecraft crashed...").define("shutdownJcef", false);
