@@ -75,8 +75,6 @@ public class ClientProxy extends BaseProxy {
     private final AppHandler appHandler = new AppHandler();
     private ExampleMod exampleMod;
 
-    public static final String LINUX_WIKI = "https://montoyo.net/wdwiki/Linux";
-
     @Override
     public void onPreInit() {
         exampleMod = new ExampleMod();
@@ -105,10 +103,11 @@ public class ClientProxy extends BaseProxy {
         if (ROOT.endsWith("/"))
             ROOT = ROOT.substring(0, ROOT.length() - 1);
 
-        JCEF_ROOT = ROOT + "/" + "jcef";
-        if(!Files.exists(Paths.get(JCEF_ROOT))){
+        Path jcefRootPath = Paths.get(ROOT, "jcef");
+        JCEF_ROOT = jcefRootPath.toString();
+        if(!Files.exists(jcefRootPath)){
             try {
-                Files.createDirectories(Paths.get(JCEF_ROOT));
+                Files.createDirectories(jcefRootPath);
             } catch (IOException e) {
                 e.printStackTrace();
                 VIRTUAL = true;
@@ -145,11 +144,19 @@ public class ClientProxy extends BaseProxy {
         if (VIRTUAL)
             return;
 
+        //-----------------------------------Add Libraries to the system properties---------------------------------
+        //----------------------------------------------------------------------------------------------------------
         Log.info("Now adding \"%s\" to jcef.library.path", JCEF_ROOT);
 
         boolean success;
         String libraryPath = JCEF_ROOT;
-        success = Util.addPath2JcefLibPath(JCEF_ROOT);
+
+        if(!OS.isMacintosh()){
+            success = Util.addPath2JcefLibPath(JCEF_ROOT);
+        }else{
+            //for mac os the libs are packed into the .app file
+            success = Util.addPath2JcefLibPath(JCEF_ROOT + "/jcef_app.app/Contents/Java");
+        }
 
         if (!success) {
             VIRTUAL = true;
@@ -159,7 +166,9 @@ public class ClientProxy extends BaseProxy {
 
         Log.info("Done without errors.");
 
-        //modify the permission on Linux
+
+        //-----------------------------------Modify the permission on Linux-----------------------------------------
+        //----------------------------------------------------------------------------------------------------------
         String exeSuffix;
         if (OS.isWindows())
             exeSuffix = ".exe";
@@ -176,28 +185,28 @@ public class ClientProxy extends BaseProxy {
             } catch (Throwable t) {
                 Log.errorEx("Error while giving execution rights to jcef_helper. MCEF will probably enter virtual mode. You can fix this by chmoding jcef_helper manually.", t);
             }
-        }else if(OS.isMacintosh()){
-            Path path = Paths.get(libraryPath,
-                    "../Frameworks/jcef Helper.app/Contents/MacOS/jcef Helper");
-
-            File file = path.toFile();
-            if(!file.exists()){
-                VIRTUAL = true;
-                Log.warning("Failed to find the Jcef Helper file at " + path);
-                return;
-            }
-            subproc = file;
         }
 
+
+        //---------------------------------------Init the Cef Setting----------------------------------------------
+        //----------------------------------------------------------------------------------------------------------
         CefSettings settings = new CefSettings();
         settings.windowless_rendering_enabled = true;
         settings.background_color = settings.new ColorType(0, 255, 255, 255);
-        settings.locales_dir_path = (new File(JCEF_ROOT, "MCEFLocales")).getAbsolutePath();
         settings.cache_path = (new File(JCEF_ROOT, "MCEFCache")).getAbsolutePath();
         if(OS.isLinux())
             settings.browser_subprocess_path = subproc.getAbsolutePath();
+
+        /*
+         *  Mac OS locales_dir_path is init at CefApp#initialize
+         */
+        if(!OS.isMacintosh())
+            settings.locales_dir_path = (new File(JCEF_ROOT, "MCEFLocales")).getAbsolutePath();
         //settings.log_severity = CefSettings.LogSeverity.LOGSEVERITY_VERBOSE;
 
+
+        //-------------------------------------------Load the libs--------------------------------------------------
+        //----------------------------------------------------------------------------------------------------------
         try {
             ArrayList<String> libs = new ArrayList<>();
 
@@ -218,8 +227,8 @@ public class ClientProxy extends BaseProxy {
             } else if (OS.isMacintosh()) {
 
                 /*
-                  Chromium Embedded Framework will added at init step.
-                  @see CefApp#startup(String[])
+                 * Chromium Embedded Framework will added at init step.
+                 * @see CefApp#startup(String[])
                  */
 
                 //add jcef
@@ -238,12 +247,8 @@ public class ClientProxy extends BaseProxy {
                 System.load(f.getPath());
             }
 
-//            String[] args = {""};
-//            if (OS.isMacintosh()) {
-//                args[0] = "--framework-dir-path=" + libraryPath +
-//                        "/../Frameworks/Chromium Embedded Framework.framework";
-//            }
-
+            //---------------------------------------------Start CEF----------------------------------------------------
+            //----------------------------------------------------------------------------------------------------------
             CefApp.startup(MCEF.CEF_ARGS);
             cefApp = CefApp.getInstance(settings);
             //cefApp.myLoc = ROOT.replace('/', File.separatorChar);
@@ -294,7 +299,6 @@ public class ClientProxy extends BaseProxy {
         ret.getClient().addLifeSpanHandler(cefLifeSpanHandlerAdapter);
 
         ret.createImmediately();
-
 
         browsers.add(ret);
         return ret;
