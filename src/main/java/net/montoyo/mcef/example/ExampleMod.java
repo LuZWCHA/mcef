@@ -1,5 +1,6 @@
 package net.montoyo.mcef.example;
 
+import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -9,6 +10,9 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.montoyo.mcef.api.*;
 import net.montoyo.mcef.utilities.Log;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An example mod that shows you how to use MCEF.
@@ -40,7 +44,48 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
         api = MCEFApi.getAPI();
         if (api == null)
             return;
+
+        //to send the modscheme in main thread or eventbus will not transform it from context loader
         api.registerScheme("mod", ModScheme.class, true, false, false, true, true, false, false);
+
+
+        //This clazz list is contain the Clazz that will be load when create request and response by JNI(Jcef), this will be called at ITS IO THREAD
+        //but it will cause the NULL Exception from Minecraft's Eventbus which do transform for all class while the Thread's context loader is null...
+        //To avoid this, I do preloading classes before Jcef call the ClassLoader to make the EventBus cache the class info.
+        List<String> classNames = Lists.newArrayList(
+                "org.cef.misc.BoolRef",
+                "org.cef.callback.CefCallback_N",
+                "net.montoyo.mcef.api.IScheme",
+                "net.montoyo.mcef.api.ISchemeResponseData",
+                "net.montoyo.mcef.api.ISchemeResponseHeaders",
+                "net.montoyo.mcef.api.IStringVisitor",
+                "org.cef.callback.CefSchemeRegistrar_N",
+                "net.montoyo.mcef.client.SchemeResourceHandler",
+                "org.cef.handler.CefResourceHandlerAdapter",
+                "net.montoyo.mcef.api.SchemePreResponse",
+                "net.montoyo.mcef.client.SchemeResourceHandler",
+                "net.montoyo.mcef.client.SchemeResourceHandler$1",
+                "org.cef.network.CefResponse_N",
+                "org.cef.network.CefResponse",
+                "org.cef.misc.IntRef",
+                "org.cef.misc.StringRef",
+                "net.montoyo.mcef.client.SchemeResponseHeaders",
+                "net.montoyo.mcef.client.SchemeResponseData"
+        );
+
+        List<String> preloadList = new ArrayList<>(classNames.size());
+        classNames.forEach(s -> {
+            try {
+                Class clazz = Class.forName(s);
+                preloadList.add(clazz.getName());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                //skip
+            }
+
+        });
+
+        Log.info("Preload: d% class.Ignore the info if you not care about the opportunity of the Class first load..", preloadList.size());
     }
 
     public void onInit() {
