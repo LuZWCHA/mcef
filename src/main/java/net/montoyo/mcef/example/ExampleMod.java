@@ -85,7 +85,7 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
 
         });
 
-        Log.info("Preload: d% class.Ignore the info if you not care about the opportunity of the Class first load..", preloadList.size());
+        Log.info("Preload: %o class.Ignore the info if you not care about the opportunity of the Class first load..", preloadList.size());
     }
 
     public void onInit() {
