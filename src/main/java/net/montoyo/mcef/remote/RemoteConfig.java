@@ -162,7 +162,7 @@ public class RemoteConfig {
         
         JsonElement mcVersions = json.get("latestVersions");
         if(mcVersions != null && mcVersions.isJsonObject()) {
-            JsonElement cVer = mcVersions.getAsJsonObject().get(Minecraft.getInstance().getLaunchedVersion());
+            JsonElement cVer = mcVersions.getAsJsonObject().get(Minecraft.getInstance().getVersion());
 
             if(cVer != null && cVer.isJsonPrimitive())
                 version = cVer.getAsString();

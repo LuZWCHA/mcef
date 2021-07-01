@@ -5,9 +5,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.Mod;
 import net.montoyo.mcef.api.*;
 import net.montoyo.mcef.utilities.Log;
 import org.lwjgl.glfw.GLFW;
@@ -39,7 +37,6 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
     }
 
     public void onPreInit() {
-        //Grab the API and make sure it isn't null.
         api = MCEFApi.getAPI();
         if (api == null)
             return;
@@ -47,6 +44,8 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
     }
 
     public void onInit() {
+
+        //The Example Mod is always at client! In your mod to check the Side!.
         //Register key binding and listen to the FML event bus for ticks.
         ClientRegistry.registerKeyBinding(key);
         MinecraftForge.EVENT_BUS.addListener(this::onTick);
@@ -67,19 +66,19 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
     }
 
     public void showScreen(String url) {
-        if (mc.screen instanceof BrowserScreen)
-            ((BrowserScreen) mc.screen).loadURL(url);
+        if (mc.currentScreen instanceof BrowserScreen)
+            ((BrowserScreen) mc.currentScreen).loadURL(url);
         else if (hasBackup()) {
-            mc.setScreen(backup);
+            mc.displayGuiScreen(backup);
             backup.loadURL(url);
             backup = null;
         } else
-            mc.setScreen(new BrowserScreen(url));
+            mc.displayGuiScreen(new BrowserScreen(url));
     }
 
     public IBrowser getBrowser() {
-        if (mc.screen instanceof BrowserScreen)
-            return ((BrowserScreen) mc.screen).browser;
+        if (mc.currentScreen instanceof BrowserScreen)
+            return ((BrowserScreen) mc.currentScreen).browser;
         else if (backup != null)
             return backup.browser;
         else
@@ -89,9 +88,9 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
     public void onTick(TickEvent ev) {
         if (ev.phase == TickEvent.Phase.START && ev.side.isClient() && ev.type == TickEvent.Type.CLIENT) {
             //Check if our key was pressed
-            if (key.isDown() && !(mc.screen instanceof BrowserScreen)) {
+            if (key.isKeyDown() && !(mc.currentScreen instanceof BrowserScreen)) {
                 //Display the web browser UI.
-                mc.setScreen(hasBackup() ? backup : new BrowserScreen());
+                mc.displayGuiScreen(hasBackup() ? backup : new BrowserScreen());
                 backup = null;
             }
         }
@@ -100,8 +99,8 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
     @Override
     public void onAddressChange(IBrowser browser, String url) {
         //Called by MCEF if a browser's URL changes. Forward this event to the screen.
-        if (mc.screen instanceof BrowserScreen)
-            ((BrowserScreen) mc.screen).onUrlChanged(browser, url);
+        if (mc.currentScreen instanceof BrowserScreen)
+            ((BrowserScreen) mc.currentScreen).onUrlChanged(browser, url);
         else if (hasBackup())
             backup.onUrlChanged(browser, url);
     }
@@ -118,31 +117,20 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
     public void onStatusMessage(IBrowser browser, String value) {
     }
 
-//    @Override
-//    public void onCursorChange(IBrowser browser, String value) {
-//        // TODO: 2021/5/25 it's not easy to change the cursor, because the LWJGL(Version < 3) don't support the function
-////        if("12".equals(value)){
-////            Cursor cur = Mouse.getNativeCursor();
-////            try {
-////                Mouse.setNativeCursor(cur);
-////            } catch (LWJGLException e) {
-////                e.printStackTrace();
-////            }
-////        }
-//
-//    }
-
     @Override
     public boolean handleQuery(IBrowser b, long queryId, String query, boolean persistent, IJSQueryCallback cb) {
         if (b != null && query.equalsIgnoreCase("username")) {
             if (b.getURL().startsWith("mod://")) {
                 //Only allow MCEF URLs to get the player's username to keep his identity secret
 
-                mc.submitAsync(() -> {
+                mc.runAsync(() -> {
                     //Add this to a scheduled task because this is NOT called from the main Minecraft thread...
 
                     try {
-                        String name = mc.getUser().getName();
+                        String name = null;
+                        if (mc.player != null) {
+                            name = mc.player.getName().getString();
+                        }
                         cb.success(name);
                     } catch (Throwable t) {
                         cb.failure(500, "Internal error.");

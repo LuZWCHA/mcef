@@ -10,7 +10,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.nio.ByteBuffer;
 
-import static com.mojang.blaze3d.systems.RenderSystem.bindTexture;
 import static org.lwjgl.opengl.EXTBGRA.GL_BGRA_EXT;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -59,7 +58,7 @@ public class PBOFrameTexture extends FrameTexture {
         setRealHeight(h);
         setRealWidth(w);
         pbo.setTag(frameId);
-        RenderSystem.bindTexture(id);
+        RenderSystem.bindTexture(glTextureId);
 
         pbo.bindPBO(GL21.GL_PIXEL_UNPACK_BUFFER);
         pbo.pboByteData(GL21.GL_PIXEL_UNPACK_BUFFER,

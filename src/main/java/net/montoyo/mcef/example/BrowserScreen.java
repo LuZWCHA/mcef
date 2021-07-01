@@ -10,7 +10,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.API;
 import net.montoyo.mcef.api.IBrowser;
-import net.montoyo.mcef.api.MCEFApi;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -59,7 +58,7 @@ public class BrowserScreen extends Screen {
 
         if(browser == null) {
             //Grab the API and make sure it isn't null.
-            API api = MCEFApi.getAPI();
+            API api = ExampleMod.INSTANCE.getAPI();
             if(api == null)
                 return;
 
@@ -71,7 +70,7 @@ public class BrowserScreen extends Screen {
 
         //Resize the browser if window size changed
         if(browser != null && minecraft != null)
-            browser.resize(minecraft.getWindow().getScreenWidth(), minecraft.getWindow().getScreenHeight() - scaleY(20));
+            browser.resize(minecraft.getMainWindow().getWidth(), minecraft.getMainWindow().getHeight() - scaleY(20));
 
         //Create GUI
         //may remove the code, super has clear them
@@ -97,7 +96,7 @@ public class BrowserScreen extends Screen {
                 @Override
                 public void onPress(Button p_onPress_1_) {
                     if(browser == null) return;
-                    String data = url.getValue();
+                    String data = url.getText();
                     String fixedURL = ExampleMod.INSTANCE.getAPI().punycode(data);
                     browser.loadURL(fixedURL);
                 }
@@ -108,7 +107,7 @@ public class BrowserScreen extends Screen {
 
                     ExampleMod.INSTANCE.setBackup(BrowserScreen.this);
                     if (minecraft != null) {
-                        onClose();
+                        closeScreen();
                     }
                 }
             })));
@@ -145,16 +144,17 @@ public class BrowserScreen extends Screen {
                     }
 
 
-                    if(minecraft != null && vId != null || redo ) {
+                    if (minecraft != null && vId != null || redo) {
                         ExampleMod.INSTANCE.setBackup(BrowserScreen.this);
-                        minecraft.setScreen(new ScreenCfg(browser, vId, type));
+                        minecraft.displayGuiScreen(new ScreenCfg(browser, vId, type));
                     }
                 }
             })));
             vidMode.active = false;
 
             url = new TextFieldWidget(font, 40, 0, width - 100, 20, new StringTextComponent(""));
-            url.setMaxLength(65535);
+            url.setMaxStringLength(65535);
+            url.setText(urlToLoad);
             //url.setText("mod://mcef/home.html");
         } else {
             buttons.add(back);
@@ -168,20 +168,20 @@ public class BrowserScreen extends Screen {
             go.x = width - 60;
             min.x = width - 20;
 
-            String old = url.getValue();
+            String old = url.getText();
             url = new TextFieldWidget(font, 40, 0, width - 100, 20, new StringTextComponent(""));
-            url.setMaxLength(65535);
-            url.setValue(old);
+            url.setMaxStringLength(65535);
+            url.setText(old);
         }
 
         //children's Input methods will be called by parent
         children.addAll(buttons);
-        addWidget(url);
+        addListener(url);
     }
     
     public int scaleY(int y) {
         assert minecraft != null;
-        double sy =  y / (double)height * minecraft.getWindow().getScreenHeight();
+        double sy = y / (double) height * minecraft.getMainWindow().getHeight();
         return (int) sy;
     }
     
@@ -196,29 +196,32 @@ public class BrowserScreen extends Screen {
     public void tick() {
         super.tick();
 
-        if(urlToLoad != null && browser != null) {
+        if (urlToLoad != null && browser != null) {
             browser.loadURL(urlToLoad);
             urlToLoad = null;
         }
 
-        if(url.isFocused()) {
-            url.tick();
-        }else{
-            url.moveCursorToEnd();
-        }
+        if (url != null)
+            if (url.isFocused()) {
+                url.tick();
+            } else {
+                url.setCursorPositionEnd();
+            }
 
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int x, int y, float pt) {
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         //Render the URL box first because it overflows a bit
-        url.render(matrixStack, x, y, pt);
+        if (url != null) {
+            url.render(matrixStack, mouseX, mouseY, partialTicks);
+        }
 
         //Render buttons
-        super.render(matrixStack, x, y, pt);
+        super.render(matrixStack, mouseX, mouseY, partialTicks);
 
         //Renders the browser if itsn't null
-        if(browser != null) {
+        if (browser != null) {
             RenderSystem.disableDepthTest();
             RenderSystem.enableTexture();
             RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -227,9 +230,12 @@ public class BrowserScreen extends Screen {
         }
     }
 
+
     @Override
     public void onClose() {
+        super.onClose();
         //Make sure to close the browser when you don't need it anymore.
+
         if(!ExampleMod.INSTANCE.hasBackup() && browser != null)
             browser.close();
         super.onClose();
@@ -250,10 +256,10 @@ public class BrowserScreen extends Screen {
     public boolean mouseDragged(double ox, double oy, int btn, double nx, double ny) {
         boolean consume = super.mouseDragged(ox, oy, btn, nx, ny);
         if (browser != null && !consume) {
-            int sx = (int) (ox / (float) width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) ((oy - 20) / (float) height * minecraft.getWindow().getScreenHeight());
-            int ex = (int) (ox / (float) width * minecraft.getWindow().getScreenWidth());
-            int ey = (int) ((oy - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (ox / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) ((oy - 20) / (float) height * minecraft.getMainWindow().getHeight());
+            int ex = (int) (ox / (float) width * minecraft.getMainWindow().getWidth());
+            int ey = (int) ((oy - 20) / (float) height * minecraft.getMainWindow().getHeight());
             browser.injectMouseDrag(sx, sy, remapBtn(btn), ex, ey);
         }
 
@@ -264,8 +270,8 @@ public class BrowserScreen extends Screen {
     public void mouseMoved(double x, double y) {
         super.mouseMoved(x, y);
         if (browser != null && minecraft != null && activateBtn == -1) {
-            int sx = (int) (x / (float) width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) ((y - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) ((y - 20) / (float) height * minecraft.getMainWindow().getHeight());
             browser.injectMouseMove(sx, sy, getMask(), y < 0);
         }
     }
@@ -276,8 +282,8 @@ public class BrowserScreen extends Screen {
 
         boolean consume = super.mouseClicked(x, y, btn);
         if (!consume && browser != null && minecraft != null) {
-            int sx = (int) (x / (float) width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) ((y - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) ((y - 20) / (float) height * minecraft.getMainWindow().getHeight());
             browser.injectMouseButton(sx, sy, getMask(), remapBtn(btn), true, 1);
             return true;
         }
@@ -293,8 +299,8 @@ public class BrowserScreen extends Screen {
         activateBtn = activateBtn == btn ? -1 : activateBtn;
         boolean consume = super.mouseReleased(x, y, btn);
         if (!consume && browser != null && minecraft != null) {
-            int sx = (int) (x / (float) width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) ((y - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) (((y - 20) / (float) height) * minecraft.getMainWindow().getHeight());
             browser.injectMouseButton(sx, sy, getMask(), remapBtn(btn), false, 1);
             return true;
         }
@@ -306,8 +312,8 @@ public class BrowserScreen extends Screen {
     public boolean mouseScrolled(double x, double y, double wheel) {
         boolean consume = super.mouseScrolled(x, y, wheel);
         if(!consume && browser != null && minecraft != null) {
-            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) ((y - 20) / (float)height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) (((y - 20) / (float) height) * minecraft.getMainWindow().getHeight());
             browser.injectMouseWheel(sx, sy, getMask(), 1, ((int) wheel * 100));
             return true;
         }
@@ -343,7 +349,7 @@ public class BrowserScreen extends Screen {
     //Called by ExampleMod when the current browser's URL changes.
     public void onUrlChanged(IBrowser b, String nurl) {
         if (b == browser && url != null) {
-            url.setValue(nurl);
+            url.setText(nurl);
             vidMode.active = nurl.matches(YT_REGEX1) || nurl.matches(YT_REGEX2) || nurl.matches(YT_REGEX3)
                     || nurl.matches(BILI_REGEX1) || nurl.matches(BILI_REGEX2) || nurl.matches(BILI_REGEX3);
         }
@@ -372,9 +378,9 @@ public class BrowserScreen extends Screen {
     private final Point point = new Point();
 
     private Point transform2BrowserSize(double x, double y) {
-        int sx = (int) (x / (float) width * minecraft.getWindow().getScreenWidth());
+        int sx = (int) (x / (float) width * minecraft.getMainWindow().getHeight());
         // 20 is the top search box's height
-        int sy = (int) ((y - 20) / (float) height * minecraft.getWindow().getScreenHeight());
+        int sy = (int) ((y - 20) / (float) height * minecraft.getMainWindow().getHeight());
         point.setLocation(sx, sy);
         return point;
     }

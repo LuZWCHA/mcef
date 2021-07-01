@@ -53,9 +53,7 @@ public class MCEF {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::loadComplete);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onLoad);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onReload);
-
         MinecraftForge.EVENT_BUS.addListener(this::onMinecraftWorldUnload);
-
 
         INSTANCE = this;
         PROXY = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> BaseProxy::new);

@@ -1,7 +1,6 @@
 package com.nowandfuture.mod.renderer.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.util.text.ITextComponent;
@@ -36,21 +35,23 @@ public class FPSGui extends Screen {
             }
         });
 
-        addWidget(slider);
+        addListener(slider);
     }
+
 
     @Override
-    public void render(MatrixStack p_230430_1_, int p_230430_2_, int p_230430_3_, float p_230430_4_) {
-        renderBackground(p_230430_1_);
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        renderBackground(matrixStack);
 
-        super.render(p_230430_1_, p_230430_2_, p_230430_3_, p_230430_4_);
+        super.render(matrixStack, mouseX, mouseY, partialTicks);
 
-        slider.render(p_230430_1_, p_230430_2_, p_230430_3_, p_230430_4_);
-        drawString(p_230430_1_, font, minecraft.fpsString, 10,10, 14737632);
-        int fps = Integer.parseInt(minecraft.fpsString.split("fps")[0].trim());
+        slider.render(matrixStack, mouseX, mouseY, partialTicks);
+        drawString(matrixStack, font, minecraft.debug, 10, 10, 14737632);
+        int fps = Integer.parseInt(minecraft.debug.split("fps")[0].trim());
         int browserFPS = (int) (fps * slider.getValue() / 100);
-        drawString(p_230430_1_, font, "Browser FPS limit: " + browserFPS, 10,10 + font.lineHeight + 5, 14737632);
+        drawString(matrixStack, font, "Browser FPS limit: " + browserFPS, 10, 10 + font.FONT_HEIGHT + 5, 14737632);
     }
+
 
     @Override
     public void onClose() {

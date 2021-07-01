@@ -4,13 +4,11 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.util.text.ITextComponent;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.API;
 import net.montoyo.mcef.api.IBrowser;
-import net.montoyo.mcef.api.MCEFApi;
 
 import javax.annotation.Nullable;
 import java.awt.event.MouseEvent;
@@ -41,7 +39,7 @@ public class BrowserWidget extends Widget implements ITickable {
     public void init(){
         if(browser == null) {
             //Grab the API and make sure it isn't null.
-            API api = MCEFApi.getAPI();
+            API api = ExampleMod.INSTANCE.getAPI();
             if(api == null)
                 return;
 
@@ -53,7 +51,7 @@ public class BrowserWidget extends Widget implements ITickable {
 
         //Resize the browser if window size changed
         if(browser != null && minecraft != null)
-            browser.resize(minecraft.getWindow().getScreenWidth(), minecraft.getWindow().getScreenHeight());
+            browser.resize(minecraft.getMainWindow().getWidth(), minecraft.getMainWindow().getHeight());
 
     }
 
@@ -110,8 +108,8 @@ public class BrowserWidget extends Widget implements ITickable {
         if(!isHovered()) return;
         super.mouseMoved(x, y);
         if(browser != null && minecraft != null) {
-            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) (y / (float)height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) (y / (float) height * minecraft.getMainWindow().getHeight());
             browser.injectMouseMove(sx, sy, 0, y < 0);
         }
     }
@@ -124,8 +122,8 @@ public class BrowserWidget extends Widget implements ITickable {
         boolean consume = super.mouseClicked(x, y, btn);
 
         if(!consume && browser != null && minecraft != null) {
-            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) (y / (float)height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) (y / (float) height * minecraft.getMainWindow().getHeight());
             browser.injectMouseButton(sx, sy, 0, remapBtn(btn), true, 1);
             return true;
         }
@@ -139,8 +137,8 @@ public class BrowserWidget extends Widget implements ITickable {
         boolean consume = super.mouseReleased(x, y, btn);
 
         if(!consume && browser != null && minecraft != null) {
-            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) (y / (float)height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) (y / (float) height * minecraft.getMainWindow().getHeight());
             browser.injectMouseButton(sx, sy, 0, remapBtn(btn), false, 1);
             return true;
         }
@@ -153,8 +151,8 @@ public class BrowserWidget extends Widget implements ITickable {
         if(!isHovered()) return false;
         boolean consume = super.mouseScrolled(x, y, wheel);
         if(!consume && browser != null && minecraft != null) {
-            int sx = (int) (x / (float)width * minecraft.getWindow().getScreenWidth());
-            int sy = (int) (y / (float)height * minecraft.getWindow().getScreenHeight());
+            int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
+            int sy = (int) (y / (float) height * minecraft.getMainWindow().getHeight());
             browser.injectMouseWheel(sx, sy, 0, 1, ((int) wheel * 100));
             return true;
         }

@@ -15,9 +15,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 
-import static com.mojang.blaze3d.systems.RenderSystem.bindTexture;
 import static com.mojang.blaze3d.systems.RenderSystem.enableBlend;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -44,15 +42,15 @@ public class CefPBORenderer extends CefRenderer {
             return;
 
         Tessellator t = Tessellator.getInstance();
-        BufferBuilder vb = t.getBuilder();
+        BufferBuilder vb = t.getBuffer();
 
         RenderSystem.bindTexture(pboFrameTexture.getGlTextureId());
         vb.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        vb.vertex(x1, y1, 0.0).uv(0.0f, 1.0f).endVertex();
-        vb.vertex(x2, y1, 0.0).uv(1.f, 1.f).endVertex();
-        vb.vertex(x2, y2, 0.0).uv(1.f, 0.0f).endVertex();
-        vb.vertex(x1, y2, 0.0).uv(0.0f, 0.0f).endVertex();
-        t.end();
+        vb.pos(x1, y1, 0.0).tex(0.0f, 1.0f).endVertex();
+        vb.pos(x2, y1, 0.0).tex(1.f, 1.f).endVertex();
+        vb.pos(x2, y2, 0.0).tex(1.f, 0.0f).endVertex();
+        vb.pos(x1, y2, 0.0).tex(0.0f, 0.0f).endVertex();
+        t.draw();
         RenderSystem.bindTexture(0);
     }
 

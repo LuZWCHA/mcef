@@ -1,18 +1,13 @@
 package net.montoyo.mcef.example;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import joptsimple.internal.Strings;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.text.Color;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.montoyo.mcef.api.IBrowser;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -75,7 +70,7 @@ public class ScreenCfg extends Screen {
             drawSquare = false;
             ExampleMod.INSTANCE.hudBrowser = this;
             browser.injectMouseMove(-10, -10, 0, true);
-            minecraft.setScreen(null);
+            minecraft.displayGuiScreen(null);
         }
         return super.keyPressed(code, p_231046_2_, p_231046_3_);
     }
@@ -166,22 +161,22 @@ public class ScreenCfg extends Screen {
         if (drawSquare) {
             boolean in = isInResizeRect(x - scr_x, y - scr_y) || resizing;
             Tessellator t = Tessellator.getInstance();
-            BufferBuilder vb = t.getBuilder();
-            if(in){
-                RenderSystem.clearColor(0,1,0,1);
+            BufferBuilder vb = t.getBuffer();
+            if(in) {
+                RenderSystem.clearColor(0, 1, 0, 1);
                 vb.begin(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR);
-                vb.vertex(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height), 0.0).color(0, 255, 0, 255).endVertex();
-                vb.vertex(unscaleX(scr_x + scr_width + squareSize), unscaleY(scr_y + scr_height), 0.0).color(0, 255, 0, 255).endVertex();
-                vb.vertex(unscaleX(scr_x + scr_width + squareSize), unscaleY(scr_y + scr_height + squareSize), 0.0).color(0, 255, 0, 255).endVertex();
-                vb.vertex(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height + squareSize), 0.0).color(0, 255, 0, 255).endVertex();
-            }else{
+                vb.pos(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height), 0.0).color(0, 255, 0, 255).endVertex();
+                vb.pos(unscaleX(scr_x + scr_width + squareSize), unscaleY(scr_y + scr_height), 0.0).color(0, 255, 0, 255).endVertex();
+                vb.pos(unscaleX(scr_x + scr_width + squareSize), unscaleY(scr_y + scr_height + squareSize), 0.0).color(0, 255, 0, 255).endVertex();
+                vb.pos(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height + squareSize), 0.0).color(0, 255, 0, 255).endVertex();
+            }else {
                 vb.begin(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR);
-                vb.vertex(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height), 0.0).color(255, 255, 255, 255).endVertex();
-                vb.vertex(unscaleX(scr_x + scr_width + squareSize), unscaleY(scr_y + scr_height), 0.0).color(255, 255, 255, 255).endVertex();
-                vb.vertex(unscaleX(scr_x + scr_width + squareSize), unscaleY(scr_y + scr_height + squareSize), 0.0).color(255, 255, 255, 255).endVertex();
-                vb.vertex(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height + squareSize), 0.0).color(255, 255, 255, 255).endVertex();
+                vb.pos(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height), 0.0).color(255, 255, 255, 255).endVertex();
+                vb.pos(unscaleX(scr_x + scr_width + squareSize), unscaleY(scr_y + scr_height), 0.0).color(255, 255, 255, 255).endVertex();
+                vb.pos(unscaleX(scr_x + scr_width + squareSize), unscaleY(scr_y + scr_height + squareSize), 0.0).color(255, 255, 255, 255).endVertex();
+                vb.pos(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height + squareSize), 0.0).color(255, 255, 255, 255).endVertex();
             }
-            t.end();
+            t.draw();
         }
 
 
@@ -203,12 +198,12 @@ public class ScreenCfg extends Screen {
 
     public double scaleX(int x) {
         assert minecraft != null;
-        return ((double) x) * ((double) minecraft.getWindow().getWidth()) / ((double) width);
+        return ((double) x) * ((double) minecraft.getMainWindow().getWidth()) / ((double) width);
     }
 
     public double scaleY(int y) {
         assert minecraft != null;
-        return ((double) y) * ((double) minecraft.getWindow().getHeight()) / ((double) height);
+        return ((double) y) * ((double) minecraft.getMainWindow().getHeight()) / ((double) height);
     }
 
 

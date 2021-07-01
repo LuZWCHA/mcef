@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.Color;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
@@ -88,7 +89,7 @@ public class ClientProxy extends BaseProxy {
         exampleMod = new ExampleMod();
         exampleMod.onPreInit();
 
-        ROOT = mc.gameDirectory.getAbsolutePath().replaceAll("\\\\", "/");
+        ROOT = mc.gameDir.getAbsolutePath().replaceAll("\\\\", "/");
         if (ROOT.endsWith("."))
             ROOT = ROOT.substring(0, ROOT.length() - 1);
 
@@ -368,9 +369,9 @@ public class ClientProxy extends BaseProxy {
         if (ev.phase == TickEvent.Phase.START) {
 
             //Check if our key was pressed
-            if (key.isDown()) {
+            if (key.isKeyDown()) {
                 //Display the UI.
-                mc.setScreen(new FPSGui());
+                mc.displayGuiScreen(new FPSGui());
             }
 
             mc.getProfiler().startTick();
@@ -394,12 +395,12 @@ public class ClientProxy extends BaseProxy {
             return;
 
         Style cs = Style.EMPTY;
-        cs.withColor(TextFormatting.LIGHT_PURPLE);
+        cs.setColor(Color.fromInt(TextFormatting.LIGHT_PURPLE.getColor()));
 
         StringTextComponent cct = new StringTextComponent(updateStr);
         cct.setStyle(cs);
 
-        ev.getPlayer().sendMessage(cct, ev.getPlayer().getUUID());
+        ev.getPlayer().sendMessage(cct, ev.getPlayer().getUniqueID());
     }
 
     public void removeBrowser(CefBrowserOsr b) {
@@ -422,7 +423,7 @@ public class ClientProxy extends BaseProxy {
         };
 
         //run the loop later in minecraft thread
-        Minecraft.getInstance().submitAsync(runnable);
+        Minecraft.getInstance().runAsync(runnable);
 
     }
 

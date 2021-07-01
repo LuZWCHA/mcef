@@ -1,7 +1,5 @@
 package net.montoyo.mcef;
 
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.montoyo.mcef.api.*;
 import net.montoyo.mcef.utilities.Log;
 

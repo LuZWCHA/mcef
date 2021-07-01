@@ -101,7 +101,7 @@ public class DisplayHandler implements CefDisplayHandler {
     }
 
     private long getMCEFWindowsHandler(){
-        return Minecraft.getInstance().getWindow().getWindow();
+        return Minecraft.getInstance().getMainWindow().getHandle();
     }
 
     public static int remapCursor(int cursorType){

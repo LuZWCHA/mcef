@@ -12,7 +12,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.nio.ByteBuffer;
 
-import static com.mojang.blaze3d.systems.RenderSystem.bindTexture;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_BGR;
 
@@ -40,7 +39,7 @@ public abstract class FrameTexture extends DynamicTexture {
 
     public void updateBuffer(ByteBuffer byteBuffer, long frameId){
         this.frameId = frameId;
-        bindTexture(id);
+        bindTexture();
         //Setup wrap mode
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
@@ -60,7 +59,7 @@ public abstract class FrameTexture extends DynamicTexture {
 
     public void updateBufferedImage(BufferedImage image,long frameId){
         this.frameId = frameId;
-        bindTexture(id);
+        bindTexture();
         //Setup wrap mode
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
@@ -86,7 +85,7 @@ public abstract class FrameTexture extends DynamicTexture {
     public void subBuffer(ByteBuffer byteBuffer,int offsetX,int offsetY, int w , int h, long frameId){
         if(frameId == this.frameId) return;
         this.frameId = frameId;
-        RenderSystem.bindTexture(id);
+        RenderSystem.bindTexture(glTextureId);
 //
 //        ByteBuffer byteBuffer = BufferUtils.createByteBuffer(w * h * BYTES_PER_PIXEL)
 //                .put(buffer.getData());
@@ -104,7 +103,7 @@ public abstract class FrameTexture extends DynamicTexture {
     public void subBufferedImage(BufferedImage image,int offsetX,int offsetY,long frameId){
         if(frameId == this.frameId) return;
         this.frameId = frameId;
-        RenderSystem.bindTexture(id);
+        RenderSystem.bindTexture(glTextureId);
 
         DataBufferByte buffer = (DataBufferByte) image.getRaster().getDataBuffer();
         ByteBuffer byteBuffer = BufferUtils.createByteBuffer(image.getWidth() * image.getHeight() * BYTES_PER_PIXEL)
@@ -141,7 +140,7 @@ public abstract class FrameTexture extends DynamicTexture {
     }
 
     public int getGlTextureId(){
-        return getId();
+        return glTextureId;
     }
 
     public int getRealHeight() {
@@ -160,6 +159,9 @@ public abstract class FrameTexture extends DynamicTexture {
         this.aw = aw;
     }
 
-    public void deleteGlTexture(){
-        RenderSystem.deleteTexture(id);};
+    public void deleteGlTexture() {
+        RenderSystem.deleteTexture(glTextureId);
+    }
+
+    ;
 }

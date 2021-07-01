@@ -7,10 +7,8 @@
 package org.cef.browser;
 
 import net.minecraft.client.Minecraft;
-import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.IStringVisitor;
-import net.montoyo.mcef.client.ClientProxy;
 import net.montoyo.mcef.client.StringVisitor;
 import net.montoyo.mcef.utilities.Log;
 import org.cef.CefClient;
@@ -184,7 +182,7 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     }
 
     private long getMCEFWindowsHandler(){
-        return Minecraft.getInstance().getWindow().getWindow();
+        return Minecraft.getInstance().getMainWindow().getHandle();
     }
 
     public static int remapCursor(int cursorType){
@@ -294,7 +292,6 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     @Override
     public void close() {
         if(CLEANUP) {
-            ((ClientProxy) MCEF.PROXY).removeBrowser(this);
             renderer_.cleanup();
         }
 

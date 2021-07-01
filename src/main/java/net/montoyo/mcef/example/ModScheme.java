@@ -2,7 +2,6 @@ package net.montoyo.mcef.example;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.MinecraftForge;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.IScheme;
 import net.montoyo.mcef.api.ISchemeResponseData;
@@ -39,7 +38,6 @@ public class ModScheme implements IScheme {
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        is = ModScheme.class.getResourceAsStream("/assets/" + mod.toLowerCase() + "/assets/mcef/html/" + loc.toLowerCase());
         if(is == null) {
             Log.warning("Resource " + url + " NOT found!");
             return SchemePreResponse.NOT_HANDLED; //Mhhhhh... 404?
