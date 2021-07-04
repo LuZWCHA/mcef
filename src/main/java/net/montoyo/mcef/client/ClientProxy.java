@@ -1,10 +1,10 @@
 package net.montoyo.mcef.client;
 
 import com.nowandfuture.mod.renderer.gui.FPSGui;
-import com.nowandfuture.mod.utilities.DownloadConfig;
-import com.nowandfuture.mod.utilities.MCEFTools;
+import com.nowandfuture.mod.utilities.MCEF_Downloader;
 import com.nowandfuture.mod.utilities.RemoteFile;
 import com.nowandfuture.mod.utilities.Utils;
+import com.nowandfuture.mod.utilities.httputils.DownloadConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.ResourceLocation;
@@ -97,7 +97,7 @@ public class ClientProxy extends BaseProxy {
         if (ROOT.endsWith("/"))
             ROOT = ROOT.substring(0, ROOT.length() - 1);
 
-        JCEF_ROOT = ROOT + "/" + "jcef";
+        JCEF_ROOT = ROOT + "/jcef";
         if (!Files.exists(Paths.get(JCEF_ROOT))) {
             try {
                 Files.createDirectories(Paths.get(JCEF_ROOT));
@@ -116,24 +116,24 @@ public class ClientProxy extends BaseProxy {
         mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start check libraries"));
         Consumer<String> consumer = mcLoaderConsumer.orElse(Log::info);
         MirrorManager.INSTANCE.addExtraMirrors(
-                new Mirror("nowandfuture", MCEFTools.getConfigUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE),
-                new Mirror("nowandfuture", MCEFTools.getLibsUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE));
-        Path downloadConfigPath = Paths.get(JCEF_ROOT, MCEFTools.CONFIG_NAME);
+                new Mirror("nowandfuture", MCEF_Downloader.getConfigUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE),
+                new Mirror("nowandfuture", MCEF_Downloader.getLibsUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE));
+        Path downloadConfigPath = Paths.get(JCEF_ROOT, MCEF_Downloader.CONFIG_NAME);
         File file = downloadConfigPath.toFile();
 
-        if (!MCEFTools.checkLocalConfigFile(JCEF_ROOT)) {
-            MCEFTools.prepareConfigsMirror();//push the url to first.
+        if (!MCEF_Downloader.checkLocalConfigFile(JCEF_ROOT)) {
+            MCEF_Downloader.prepareConfigsMirror();//push the url to first.
 
             mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start collect download source list."));
-            file = MCEFTools.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), modConsumer.get());
+            file = MCEF_Downloader.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), modConsumer.get());
         }
 
         if (file != null && file.exists()) {
             try {
                 mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: check lib files."));
-                MCEFTools.prepareLibsMirror();//push the url to the first.
+                MCEF_Downloader.prepareLibsMirror();//push the url to the first.
 
-                success = MCEFTools.downloadLibFilesBy(file, JCEF_ROOT, DownloadConfig.createDefault(), modConsumer.get());
+                success = MCEF_Downloader.downloadLibFilesBy(file, JCEF_ROOT, DownloadConfig.createDefault(), modConsumer.get());
                 if (!success) {
                     mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: download failed, go to Virtual mode."));
                 } else {

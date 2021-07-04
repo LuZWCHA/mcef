@@ -41,6 +41,7 @@ sourceSets {
 }
 
 configurations {
+    //to implement the main module's dependencies
     apiImplementation.extendsFrom(implementation)
     apiRuntimeOnly.extendsFrom(runtimeOnly)
 }
@@ -111,6 +112,8 @@ dependencies {
 
     implementation 'org.spongepowered:mixin:0.8.2'
     annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
+
+    implementation "com.squareup.okhttp3:okhttp:4.9.1"
 
     minecraft 'net.minecraftforge:forge:1.16.5-36.1.0'
 

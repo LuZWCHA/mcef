@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import com.nowandfuture.mod.utilities.httputils.DownloadConfig;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.remote.Mirror;
 import net.montoyo.mcef.remote.MirrorManager;
@@ -228,6 +229,7 @@ public class Utils {
 
     public static boolean download(RemoteFile remoteFile, File saveFile, String postfix, IProgressListener downloadListener) {
         String relativePath = remoteFile.getRemotePath();
+        //To speed up development, just use monotoy download tools
         boolean flag = Util.download(relativePath, saveFile, downloadListener);
         String oldName = saveFile.getName();
         if (flag && oldName.endsWith(postfix)) {

@@ -3,6 +3,7 @@ package com.nowandfuture.mod.utilities;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
+import com.nowandfuture.mod.utilities.httputils.DownloadConfig;
 import net.montoyo.mcef.remote.Mirror;
 import net.montoyo.mcef.remote.MirrorManager;
 import org.junit.jupiter.api.AfterAll;
@@ -400,40 +401,40 @@ class UtilsTest {
 
     //    @Test
     public void testDownloadConfig() throws IOException {
-        MCEFTools.prepareConfigsMirror();
+        MCEF_Downloader.prepareConfigsMirror();
         Path downloadConfigPath = Paths.get(temPath.toString(), "downloads.json");
         Files.deleteIfExists(downloadConfigPath);
-        File file = MCEFTools.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), System.out::println);
+        File file = MCEF_Downloader.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), System.out::println);
         Assertions.assertNotNull(file);
         Assertions.assertTrue(file.exists());
         Optional<DownloadInfo> remoteInfo = Utils.readFromConfigFile2(file.getAbsolutePath());
         Assertions.assertTrue(remoteInfo.isPresent());
         Assertions.assertEquals(remoteInfo.get(), downloadInfo);
         //wrong download url
-        MCEFTools.prepareLibsMirror();
-        file = MCEFTools.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), System.out::println);
+        MCEF_Downloader.prepareLibsMirror();
+        file = MCEF_Downloader.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), System.out::println);
         Assertions.assertNull(file);
 
-        MirrorManager.INSTANCE.addExtraMirrors(new Mirror("nowandfuture", MCEFTools.getConfigUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE));
-        file = MCEFTools.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), System.out::println);
+        MirrorManager.INSTANCE.addExtraMirrors(new Mirror("nowandfuture", MCEF_Downloader.getConfigUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE));
+        file = MCEF_Downloader.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), System.out::println);
         Assertions.assertNotNull(file);
     }
 
     //    @Test
     public void testDownloadLibs() throws IOException {
-        MCEFTools.prepareConfigsMirror();
+        MCEF_Downloader.prepareConfigsMirror();
         Path downloadConfigPath = Paths.get(temPath.toString(), "downloads.json");
         Files.deleteIfExists(downloadConfigPath);
-        File file = MCEFTools.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), System.out::println);
+        File file = MCEF_Downloader.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), System.out::println);
         Assertions.assertNotNull(file);
         Assertions.assertTrue(file.exists());
         Optional<DownloadInfo> remoteInfo = Utils.readFromConfigFile2(file.getAbsolutePath());
         Assertions.assertTrue(remoteInfo.isPresent());
         Assertions.assertEquals(remoteInfo.get(), downloadInfo);
 
-        MCEFTools.prepareLibsMirror();
+        MCEF_Downloader.prepareLibsMirror();
         //read download information first, then download miss files
-        boolean flag = MCEFTools.downloadLibFilesBy(file, temPath.toString(), DownloadConfig.createDefault(), System.out::println);
+        boolean flag = MCEF_Downloader.downloadLibFilesBy(file, temPath.toString(), DownloadConfig.createDefault(), System.out::println);
         Assertions.assertTrue(flag);
     }
 

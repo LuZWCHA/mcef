@@ -4,7 +4,8 @@
   "mixins": [
   ],
   "client": [
-    "MixinMinecraft"
+    "MixinMinecraft",
+    "MixinMinecraftAccessor"
   ],
   "server": [],
   "compatibilityLevel": "JAVA_8",

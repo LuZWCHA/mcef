@@ -15,7 +15,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 
 public class BrowserScreen extends Screen {
-    
+
     IBrowser browser = null;
     private Button back = null;
     private Button fwd = null;
@@ -49,17 +49,16 @@ public class BrowserScreen extends Screen {
         super.init();
         ExampleMod.INSTANCE.hudBrowser = null;
 
-
         // to remove the backup browser, when it is opened in this screen
-        if(ExampleMod.INSTANCE.hasBackup()){
+        if (ExampleMod.INSTANCE.hasBackup()) {
             browser = ExampleMod.INSTANCE.getBrowser();
             ExampleMod.INSTANCE.setBackup(null);
         }
 
-        if(browser == null) {
+        if (browser == null) {
             //Grab the API and make sure it isn't null.
             API api = ExampleMod.INSTANCE.getAPI();
-            if(api == null)
+            if (api == null)
                 return;
 
             //Create a browser and resize it to fit the screen
@@ -69,33 +68,33 @@ public class BrowserScreen extends Screen {
         }
 
         //Resize the browser if window size changed
-        if(browser != null && minecraft != null)
+        if (browser != null && minecraft != null)
             browser.resize(minecraft.getMainWindow().getWidth(), minecraft.getMainWindow().getHeight() - scaleY(20));
 
         //Create GUI
-        //may remove the code, super has clear them
+        //may remove the code, super class has cleared them
         buttons.clear();
         children.clear();
 
-        if(url == null) {
+        if (url == null) {
             buttons.add(back = (new Button(0, 0, 20, 20, new StringTextComponent("<"), new Button.IPressable() {
                 @Override
-                public void onPress(Button p_onPress_1_) {
-                    if(browser == null) return;
+                public void onPress(Button btn) {
+                    if (browser == null) return;
                     browser.goBack();
                 }
             })));
             buttons.add(fwd = (new Button(20, 0, 20, 20, new StringTextComponent(">"), new Button.IPressable() {
                 @Override
-                public void onPress(Button p_onPress_1_) {
-                    if(browser == null) return;
+                public void onPress(Button btn) {
+                    if (browser == null) return;
                     browser.goForward();
                 }
             })));
             buttons.add(go = (new Button(width - 60, 0, 20, 20, new StringTextComponent("Go"), new Button.IPressable() {
                 @Override
-                public void onPress(Button p_onPress_1_) {
-                    if(browser == null) return;
+                public void onPress(Button btn) {
+                    if (browser == null) return;
                     String data = url.getText();
                     String fixedURL = ExampleMod.INSTANCE.getAPI().punycode(data);
                     browser.loadURL(fixedURL);
@@ -103,7 +102,7 @@ public class BrowserScreen extends Screen {
             })));
             buttons.add(min = (new Button(width - 20, 0, 20, 20, new StringTextComponent("_"), new Button.IPressable() {
                 @Override
-                public void onPress(Button p_onPress_1_) {
+                public void onPress(Button btn) {
 
                     ExampleMod.INSTANCE.setBackup(BrowserScreen.this);
                     if (minecraft != null) {
@@ -113,8 +112,8 @@ public class BrowserScreen extends Screen {
             })));
             buttons.add(vidMode = (new Button(width - 40, 0, 20, 20, new StringTextComponent("YT"), new Button.IPressable() {
                 @Override
-                public void onPress(Button p_onPress_1_) {
-                    if(browser == null) return;
+                public void onPress(Button btn) {
+                    if (browser == null) return;
                     //do nothing
                     String loc = browser.getURL();
                     String vId = null;
@@ -122,22 +121,22 @@ public class BrowserScreen extends Screen {
 
                     String type = null;
                     // For Chinese User Bili may be a popular web
-                    if(loc.matches(YT_REGEX1)) {
+                    if (loc.matches(YT_REGEX1)) {
                         vId = loc.replaceFirst(YT_REGEX1, "$1");
                         type = "ytb";
-                    }else if(loc.matches(YT_REGEX2)) {
+                    } else if (loc.matches(YT_REGEX2)) {
                         vId = loc.replaceFirst(YT_REGEX2, "$1");
                         type = "ytb";
-                    }else if(loc.matches(YT_REGEX3)) {
+                    } else if (loc.matches(YT_REGEX3)) {
                         redo = true;
                         type = "ytb";
-                    }else if(loc.matches(BILI_REGEX1)){
+                    } else if (loc.matches(BILI_REGEX1)) {
                         redo = true;
                         type = "bili";
-                    }else if(loc.matches(BILI_REGEX2)){
+                    } else if (loc.matches(BILI_REGEX2)) {
                         vId = loc.replaceFirst(BILI_REGEX2, "$1");
                         type = "bili";
-                    }else if(loc.matches(BILI_REGEX3)){
+                    } else if (loc.matches(BILI_REGEX3)) {
                         // for a live full screen it will be also useful...
                         vId = loc.replaceFirst(BILI_REGEX3, "$1");
                         type = "bili_live";
@@ -178,15 +177,15 @@ public class BrowserScreen extends Screen {
         children.addAll(buttons);
         addListener(url);
     }
-    
+
     public int scaleY(int y) {
         assert minecraft != null;
         double sy = y / (double) height * minecraft.getMainWindow().getHeight();
         return (int) sy;
     }
-    
+
     public void loadURL(String url) {
-        if(browser == null)
+        if (browser == null)
             urlToLoad = url;
         else
             browser.loadURL(url);
@@ -236,7 +235,7 @@ public class BrowserScreen extends Screen {
         super.onClose();
         //Make sure to close the browser when you don't need it anymore.
 
-        if(!ExampleMod.INSTANCE.hasBackup() && browser != null)
+        if (!ExampleMod.INSTANCE.hasBackup() && browser != null)
             browser.close();
         super.onClose();
     }
@@ -311,7 +310,7 @@ public class BrowserScreen extends Screen {
     @Override
     public boolean mouseScrolled(double x, double y, double wheel) {
         boolean consume = super.mouseScrolled(x, y, wheel);
-        if(!consume && browser != null && minecraft != null) {
+        if (!consume && browser != null && minecraft != null) {
             int sx = (int) (x / (float) width * minecraft.getMainWindow().getWidth());
             int sy = (int) (((y - 20) / (float) height) * minecraft.getMainWindow().getHeight());
             browser.injectMouseWheel(sx, sy, getMask(), 1, ((int) wheel * 100));
@@ -323,11 +322,11 @@ public class BrowserScreen extends Screen {
     @Override
     public boolean keyPressed(int keycode, int p_231046_2_, int p_231046_3_) {
         boolean consume = super.keyPressed(keycode, p_231046_2_, p_231046_3_);
-        if(minecraft == null) return true;
+        if (minecraft == null) return true;
 
         char c = (char) keycode;
 
-        if(!consume && browser != null) {
+        if (!consume && browser != null) {
             browser.injectKeyPressedByKeyCode(keycode, c, getMask());
             return true;
         }
@@ -339,7 +338,7 @@ public class BrowserScreen extends Screen {
     public boolean keyReleased(int key, int p_223281_2_, int p_223281_3_) {
         boolean consume = super.keyReleased(key, p_223281_2_, p_223281_3_);
         char c = (char) key;
-        if(browser != null && !consume) {
+        if (browser != null && !consume) {
             browser.injectKeyReleasedByKeyCode(key, c, getMask());
             return true;
         }
@@ -356,7 +355,7 @@ public class BrowserScreen extends Screen {
     }
 
     //remap from GLFW to AWT's button ids
-    private int remapBtn(int btn){
+    private int remapBtn(int btn) {
         if (btn == 0) {
             btn = MouseEvent.BUTTON1;
         } else if (btn == 1) {

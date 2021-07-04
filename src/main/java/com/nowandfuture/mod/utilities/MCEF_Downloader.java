@@ -1,5 +1,6 @@
 package com.nowandfuture.mod.utilities;
 
+import com.nowandfuture.mod.utilities.httputils.DownloadConfig;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.utilities.IProgressListener;
 
@@ -14,8 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class MCEFTools {
-    static String url = "http://share.nowandfuture.top/cef";
+public class MCEF_Downloader {
+    private static String DOMAIN = "http://share.nowandfuture.top/cef";
     public static String CONFIG_NAME = "downloads.json";
 
     public static void prepareConfigsMirror() {
@@ -23,7 +24,7 @@ public class MCEFTools {
     }
 
     public static String getConfigUrl() {
-        return url + "/config/" + MCEF.VERSION + "/" + getOSName();
+        return DOMAIN + "/config/" + MCEF.VERSION + "/" + getOSName();
     }
 
     public static boolean checkJcefRoot(String root) throws IOException {
@@ -100,7 +101,7 @@ public class MCEFTools {
     }
 
     public static String getLibsUrl() {
-        return url + "/libs/" + MCEF.VERSION + "/" + getOSName();
+        return DOMAIN + "/libs/" + MCEF.VERSION + "/" + getOSName();
     }
 
     public static boolean downloadLibFilesBy(File configFile, String root, DownloadConfig config, @Nonnull Consumer<String> messageConsumer) {
