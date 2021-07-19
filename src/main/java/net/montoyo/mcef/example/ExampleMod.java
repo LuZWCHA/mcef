@@ -1,32 +1,16 @@
 package net.montoyo.mcef.example;
 
-import javafx.scene.Cursor;
-import javafx.scene.ImageCursor;
-import javafx.scene.image.Image;
-import net.minecraftforge.common.MinecraftForge;
-import net.montoyo.mcef.utilities.Log;
-import org.lwjgl.LWJGLException;
-import org.lwjgl.input.Keyboard;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-
-import net.montoyo.mcef.api.API;
-import net.montoyo.mcef.api.IBrowser;
-import net.montoyo.mcef.api.IDisplayHandler;
-import net.montoyo.mcef.api.IJSQueryCallback;
-import net.montoyo.mcef.api.IJSQueryHandler;
-import net.montoyo.mcef.api.MCEFApi;
-
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import org.lwjgl.input.Mouse;
-
-import java.awt.image.DataBufferByte;
+import net.montoyo.mcef.api.*;
+import net.montoyo.mcef.utilities.Log;
+import org.lwjgl.input.Keyboard;
 
 /**
  * An example mod that shows you how to use MCEF.
@@ -115,7 +99,6 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
 
     @Override
     public void onAddressChange(IBrowser browser, String url) {
-        System.out.println(url);
         //Called by MCEF if a browser's URL changes. Forward this event to the screen.
         if(mc.currentScreen instanceof BrowserScreen)
             ((BrowserScreen) mc.currentScreen).onUrlChanged(browser, url);

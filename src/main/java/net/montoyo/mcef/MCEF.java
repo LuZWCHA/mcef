@@ -75,6 +75,10 @@ public class MCEF {
         PROXY.onInit();
     }
 
+    public static void onMinecraftShutdown(){
+        PROXY.onShutdown();
+    }
+
     //This is needed, otherwise for some reason HTTPS doesn't work
     private static void importLetsEncryptCertificate() {
         try {

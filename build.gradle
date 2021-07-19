@@ -1,10 +1,10 @@
 buildscript {
     repositories {
         mavenCentral()
-        maven {
-            name = "forge"
-            url = "http://crystal.app.lss233.com/repositories/minecraft"
-        }
+//        maven {
+//            name = "forge"
+//            url = "http://crystal.app.lss233.com/repositories/minecraft"
+//        }
         maven { url = "http://files.minecraftforge.net/maven" }
         maven {
             name = 'sponge'
@@ -20,9 +20,9 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'org.spongepowered.mixin'
 
 
-version = "1.20"
+version = "1.11"
 group = "net.montoyo.mcef"
-archivesBaseName = "mcef-${version}"
+archivesBaseName = "mcef-${mcversion}"
 def enableSigning = false
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
@@ -81,7 +81,7 @@ jar {
     manifest {
         manifest.attributes([
                 "FMLCorePluginContainsFMLMod": 'true',
-                "FMLCorePlugin"              : "com.nowandfuture.translation.LoadingPlugin",
+                "FMLCorePlugin"              : "net.montoyo.mcef.LoadingPlugin",
                 "TweakClass"                 : "org.spongepowered.asm.launch.MixinTweaker"
         ])
     }

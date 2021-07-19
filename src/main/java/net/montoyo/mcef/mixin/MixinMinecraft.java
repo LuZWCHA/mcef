@@ -2,7 +2,6 @@ package net.montoyo.mcef.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.montoyo.mcef.MCEF;
-import net.montoyo.mcef.utilities.Log;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,7 +16,7 @@ public abstract class MixinMinecraft {
             at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;destroy()V", shift = At.Shift.AFTER),
             locals = LocalCapture.CAPTURE_FAILSOFT
     )
-    private void inject_run(CallbackInfo callbackInfo) {
-        MCEF.PROXY.onShutdown();
+    public void inject_shutdownMinecraftApplet(CallbackInfo callbackInfo) {
+        MCEF.onMinecraftShutdown();
     }
 }
