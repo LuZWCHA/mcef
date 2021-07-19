@@ -7,7 +7,7 @@
     "mcversion": "${mcversion}",
     "url": "https://github.com/montoyo/mcef",
     "updateUrl": "",
-    "authorList": [ "montoyo" ],
+    "authorList": [ "montoyo", "nowandfuture"],
     "credits": "MCEF is based on JCEF https://bitbucket.org/chromiumembedded/java-cef/ under BSD.",
     "logoFile": "",
     "screenshots": [],

@@ -20,9 +20,9 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'org.spongepowered.mixin'
 
 
-version = "1.12.2-1.20"
+version = "1.20"
 group = "net.montoyo.mcef"
-archivesBaseName = "mcef"
+archivesBaseName = "mcef-${version}"
 def enableSigning = false
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
@@ -51,11 +51,30 @@ task importLetsEncryptCertificate {
 processResources.dependsOn importLetsEncryptCertificate
 
 dependencies {
+    implementation sourceSets.api.output
     provided('org.spongepowered:mixin:0.8') {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
     }
+}
+
+task apiJar(type: Jar) {
+    classifier = 'api'
+
+    from sourceSets.api.output
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allJava
+    from sourceSets.api.allJava
+}
+
+task deobfJar(type: Jar) {
+    classifier = 'deobf'
+    from sourceSets.main.output
+    from sourceSets.api.output
 }
 
 jar {
@@ -64,13 +83,18 @@ jar {
                 "FMLCorePluginContainsFMLMod": 'true',
                 "FMLCorePlugin"              : "com.nowandfuture.translation.LoadingPlugin",
                 "TweakClass"                 : "org.spongepowered.asm.launch.MixinTweaker"
-
         ])
     }
 
     from configurations.provided.asFileTree.files.collect {
         zipTree(it)
     }
+}
+
+artifacts {
+    archives apiJar
+    archives sourcesJar
+    archives deobfJar
 }
 
 processResources {
