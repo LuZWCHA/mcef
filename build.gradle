@@ -1,12 +1,12 @@
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
         mavenCentral()
+
+        maven { url = 'https://files.minecraftforge.net/maven' }
         maven {
             name = 'sponge'
             url = 'https://repo.spongepowered.org/maven'
         }
-
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
@@ -17,6 +17,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
+
 
 version = '2.11'
 group = 'com.nowandfuture.mcef'
@@ -40,10 +41,8 @@ sourceSets {
     }
 }
 
-configurations {
-    //to implement the main module's dependencies
-    apiImplementation.extendsFrom(implementation)
-    apiRuntimeOnly.extendsFrom(runtimeOnly)
+repositories {
+    mavenCentral()
 }
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
@@ -106,6 +105,14 @@ test {
     useJUnitPlatform()
 }
 
+configurations  {
+    shade
+    compile.extendsFrom(shade)
+    //to implement the main module's dependencies
+    apiImplementation.extendsFrom(implementation)
+    apiRuntimeOnly.extendsFrom(runtimeOnly)
+}
+
 dependencies {
 
     testCompile 'org.junit.jupiter:junit-jupiter:5.7.0'
@@ -113,11 +120,9 @@ dependencies {
     implementation 'org.spongepowered:mixin:0.8.2'
     annotationProcessor "org.spongepowered:mixin:0.8.2:processor"
 
-    implementation "com.squareup.okhttp3:okhttp:4.9.1"
-
     minecraft 'net.minecraftforge:forge:1.16.5-36.1.0'
 
-//    compile fileTree(dir: 'libs', includes:  ['jcef.jar'])
+    shade "com.squareup.okhttp3:okhttp:4.9.1"
 }
 
 task apiJar(type: Jar) {
@@ -137,6 +142,7 @@ task deobfJar(type: Jar) {
     archiveClassifier.set 'deobf'
     from sourceSets.main.output
     from sourceSets.api.output
+    from configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
 
     manifest {
         attributes([
@@ -144,7 +150,7 @@ task deobfJar(type: Jar) {
                 "Specification-Vendor": "mcef",
                 "Specification-Version": "1", // We are version 1 of ourselves
                 "Implementation-Title": project.name,
-                "Implementation-Version": "${version}",
+                "Implementation-Version": project.version,
                 "Implementation-Vendor" :"mcef",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 "MixinConnector": "com.nowandfuture.mod.mixin.MCEFConnector"
@@ -156,6 +162,7 @@ task deobfJar(type: Jar) {
 jar {
     from sourceSets.main.output
     from sourceSets.api.output
+    from configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
 
     manifest {
         attributes([
@@ -163,12 +170,13 @@ jar {
             "Specification-Vendor": "mcef",
             "Specification-Version": "1", // We are version 1 of ourselves
             "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
+            "Implementation-Version": project.version,
             "Implementation-Vendor" :"mcef",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
             "MixinConnector": "com.nowandfuture.mod.mixin.MCEFConnector"
         ])
     }
+
 }
 
 mixin {

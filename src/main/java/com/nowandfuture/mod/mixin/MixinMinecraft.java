@@ -20,6 +20,4 @@ public abstract class MixinMinecraft {
         MCEF.PROXY.onShutdown();
     }
 
-
-
 }

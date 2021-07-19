@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class MCEF_Downloader {
+public class MCEFDownloader {
     private static String DOMAIN = "http://share.nowandfuture.top/cef";
     public static String CONFIG_NAME = "downloads.json";
 

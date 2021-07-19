@@ -15,7 +15,6 @@ import net.montoyo.mcef.utilities.Util;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -96,17 +95,14 @@ public class Utils {
             String method = downloadInfo.getCheckSum();
             List<DownloadInfo.FilesBean> downloads = downloadInfo.getFiles();
 
-            return downloads.stream().map(new Function<DownloadInfo.FilesBean, RemoteFile>() {
-                @Override
-                public RemoteFile apply(DownloadInfo.FilesBean filesBean) {
+            return downloads.stream().map(filesBean -> {
 
-                    RemoteFile remoteFile = RemoteFile.createFake();
-                    remoteFile.setMethod(method);
-                    remoteFile.setSum(DatatypeConverter.parseHexBinary(filesBean.getSum()));
-                    remoteFile.setRemotePath(filesBean.getPath());
+                RemoteFile remoteFile = RemoteFile.createFake();
+                remoteFile.setMethod(method);
+                remoteFile.setSum(filesBean.getSum());
+                remoteFile.setRemotePath(filesBean.getPath());
 
-                    return remoteFile;
-                }
+                return remoteFile;
             }).collect(Collectors.toList());
         }catch (Exception e){
             e.printStackTrace();
@@ -126,8 +122,7 @@ public class Utils {
         assert !remoteFiles.isEmpty();
         String checkSum = remoteFiles.get(0).getMethod();
         List<DownloadInfo.FilesBean> list = remoteFiles.stream()
-                .map(remoteFile -> new DownloadInfo.FilesBean(remoteFile.getRemotePath().replace(File.separatorChar, '/'),
-                        DatatypeConverter.printHexBinary(remoteFile.getSum()).toLowerCase(Locale.ROOT)))
+                .map(remoteFile -> new DownloadInfo.FilesBean(remoteFile.getRemotePath().replace(File.separatorChar, '/'), remoteFile.getSum().toLowerCase(Locale.ROOT)))
                 .collect(Collectors.toList());
 
         File output = new File(savePath);
@@ -149,7 +144,7 @@ public class Utils {
                     File checkFile = combine.toFile();
                     if (checkFile.exists()) {
                         return getRemoteFile(combine, f, remoteFile.getMethod())
-                                .filter(toCheck -> !Arrays.equals(remoteFile.getSum(), toCheck.getSum()));
+                                .filter(toCheck -> !remoteFile.getSum().equals(toCheck.getSum()));
                     }
                     return Optional.of(remoteFile);
                 }).collect(ArrayList::new,
@@ -224,7 +219,7 @@ public class Utils {
     }
 
     public static void setupMirror(String url) {
-        MirrorManager.INSTANCE.forceSetCurrent(new Mirror("nowandfuture", url, Mirror.FLAG_FORCED));
+        MirrorManager.INSTANCE.forceSetCurrent(new Mirror("nowandfuture", url, 0));
     }
 
     public static boolean download(RemoteFile remoteFile, File saveFile, String postfix, IProgressListener downloadListener) {
@@ -277,7 +272,7 @@ public class Utils {
         try {
             b = Files.readAllBytes(Paths.get(path));
             byte[] hash = MessageDigest.getInstance(method).digest(b);
-            return DatatypeConverter.printHexBinary(hash);
+            return printHexBinary(hash);
         } catch (IOException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -308,7 +303,7 @@ public class Utils {
                 while (fis.read(buffer, 0, BUFFER_SIZE) != -1) ;
                 byte[] bytes = fis.getMessageDigest().digest();
                 RemoteFile remoteFile = new RemoteFile(rootDir);
-                remoteFile.setSum(bytes);
+                remoteFile.setSum(printHexBinary(bytes).toLowerCase(Locale.ROOT));
                 remoteFile.setRemotePath(rootDir.toPath().relativize(path).toString());
                 remoteFile.setMethod(method);
                 return Optional.of(remoteFile);
@@ -319,22 +314,15 @@ public class Utils {
         return Optional.empty();
     }
 
-    public static void main(String[] args) {
+    private static final char[] hexCode = "0123456789ABCDEF".toCharArray();
 
-//        try {
-//            Path parent = Paths.get("D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test");
-//            collectFiles("D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test", "MD5",
-//                    path -> parent.relativize(path).startsWith("MCEFCache"), 2).ifPresent(remoteFiles -> {
-//                                try {
-//                                    File file = write2ConfigFile(remoteFiles, "win64", "D:/Projects/Java/games/mc/Forge/1.16.5/mcef/run/test/downloads.json");
-//                                } catch (IOException e) {
-//                                    e.printStackTrace();
-//                                }
-//                            });
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-
+    //from DatatypeConverter by javax.xml.bind that is deprecated with Java 9 and removed with Java 11,
+    public static String printHexBinary(byte[] data) {
+        StringBuilder r = new StringBuilder(data.length * 2);
+        for (byte b : data) {
+            r.append(hexCode[(b >> 4) & 0xF]);
+            r.append(hexCode[(b & 0xF)]);
+        }
+        return r.toString();
     }
 }

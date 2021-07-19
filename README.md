@@ -8,3 +8,4 @@ Too many changes so I didn't fork but restart the source.
 3. PBO support now, see (1);
 4. Add Bilibili source for Chinese Users;
 5. Modified the FPS Limit for the Browser.
+6. Support Mac and Linux (theoretically).

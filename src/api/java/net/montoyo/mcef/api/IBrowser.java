@@ -1,20 +1,22 @@
 package net.montoyo.mcef.api;
 
 public interface IBrowser {
-    
+
     /**
      * Destroys the web view.
      */
     void close();
-    
+
+    boolean isActivate();
+
     /**
      * Resizes the web view.
-     * 
-     * @param width The new width in pixels.
+     *
+     * @param width  The new width in pixels.
      * @param height The new height in pixels.
      */
     void resize(int width, int height);
-    
+
     /**
      * Renders the web view into Minecraft.
      * 

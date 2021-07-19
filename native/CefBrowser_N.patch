@@ -1,0 +1,41 @@
+--- origin/CefBrowser_N.cpp	2021-05-25 23:11:50.947117800 +0800
++++ new/CefBrowser_N.cpp	2021-06-22 23:20:24.116277000 +0800
+@@ -1615,11 +1615,12 @@
+   JNI_STATIC_DEFINE_INT(env, cls, KEY_RELEASED);
+   JNI_STATIC_DEFINE_INT(env, cls, KEY_TYPED);
+ 
+-  int event_type, modifiers;
++  int event_type, modifiers, key_code;
+   char16 key_char;
+   if (!CallJNIMethodI_V(env, cls, key_event, "getID", &event_type) ||
+       !CallJNIMethodC_V(env, cls, key_event, "getKeyChar", &key_char) ||
+-      !CallJNIMethodI_V(env, cls, key_event, "getModifiersEx", &modifiers)) {
++      !CallJNIMethodI_V(env, cls, key_event, "getModifiersEx", &modifiers) ||
++      !CallJNIMethodI_V(env, cls, key_event, "getKeyCode", &key_code)) {
+     return;
+   }
+ 
+@@ -1628,13 +1629,18 @@
+ 
+ #if defined(OS_WIN)
+ 
+-  jlong scanCode = 0;
+-  GetJNIFieldLong(env, cls, key_event, "scancode", &scanCode);
+-  BYTE VkCode = LOBYTE(MapVirtualKey(scanCode, MAPVK_VSC_TO_VK));
+-  cef_event.native_key_code = (scanCode << 16) |  // key scan code
++ // jlong scanCode = 0;
++ // GetJNIFieldLong(env, cls, key_event, "scancode", &scanCode);
++ // BYTE VkCode = LOBYTE(MapVirtualKey(scanCode, MAPVK_VSC_TO_VK));
++ // cef_event.native_key_code = (scanCode << 16) |  // key scan code
++ //                             1;                  // key repeat count
++
++  BYTE VkCode = static_cast<BYTE>(key_code);
++  cef_event.native_key_code = (key_code << 16) |  // key scan code
+                               1;                  // key repeat count
++
+ #elif defined(OS_LINUX) || defined(OS_MACOSX)
+-  int key_code;
++  
+   if (!CallJNIMethodI_V(env, cls, key_event, "getKeyCode", &key_code)) {
+     return;
+   }

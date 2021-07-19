@@ -34,6 +34,7 @@ public class BrowserScreen extends Screen {
     private static final String BILI_REGEX2 = "^https?://(?:www\\.)?bilibili\\.com[\\\\/]video[\\\\/]([a-zA-Z0-9_\\-]+)($|(\\?.*)$)";
 
     private static final String BILI_REGEX3 = "^https?://(?:www\\.)?live\\.bilibili\\.com[\\\\/]([a-zA-Z0-9_\\-]+)($|(\\?.*)$)";
+    private static final String ALL = ".*";
 
     public BrowserScreen() {
         this(null);
@@ -52,6 +53,10 @@ public class BrowserScreen extends Screen {
         // to remove the backup browser, when it is opened in this screen
         if (ExampleMod.INSTANCE.hasBackup()) {
             browser = ExampleMod.INSTANCE.getBrowser();
+            //check the browser, if it has been closed remove it.
+            if (browser != null && !browser.isActivate()) {
+                browser = null;
+            }
             ExampleMod.INSTANCE.setBackup(null);
         }
 
@@ -110,7 +115,7 @@ public class BrowserScreen extends Screen {
                     }
                 }
             })));
-            buttons.add(vidMode = (new Button(width - 40, 0, 20, 20, new StringTextComponent("YT"), new Button.IPressable() {
+            buttons.add(vidMode = (new Button(width - 40, 0, 20, 20, new StringTextComponent("[]"), new Button.IPressable() {
                 @Override
                 public void onPress(Button btn) {
                     if (browser == null) return;
@@ -140,6 +145,9 @@ public class BrowserScreen extends Screen {
                         // for a live full screen it will be also useful...
                         vId = loc.replaceFirst(BILI_REGEX3, "$1");
                         type = "bili_live";
+                    } else {
+                        redo = true;
+                        type = "all";
                     }
 
 
@@ -149,7 +157,7 @@ public class BrowserScreen extends Screen {
                     }
                 }
             })));
-            vidMode.active = false;
+            vidMode.active = true;
 
             url = new TextFieldWidget(font, 40, 0, width - 100, 20, new StringTextComponent(""));
             url.setMaxStringLength(65535);
@@ -235,8 +243,11 @@ public class BrowserScreen extends Screen {
         super.onClose();
         //Make sure to close the browser when you don't need it anymore.
 
-        if (!ExampleMod.INSTANCE.hasBackup() && browser != null)
+        if (!ExampleMod.INSTANCE.hasBackup() && browser != null) {
             browser.close();
+            browser = null;
+        }
+
         super.onClose();
     }
 
@@ -349,8 +360,6 @@ public class BrowserScreen extends Screen {
     public void onUrlChanged(IBrowser b, String nurl) {
         if (b == browser && url != null) {
             url.setText(nurl);
-            vidMode.active = nurl.matches(YT_REGEX1) || nurl.matches(YT_REGEX2) || nurl.matches(YT_REGEX3)
-                    || nurl.matches(BILI_REGEX1) || nurl.matches(BILI_REGEX2) || nurl.matches(BILI_REGEX3);
         }
     }
 

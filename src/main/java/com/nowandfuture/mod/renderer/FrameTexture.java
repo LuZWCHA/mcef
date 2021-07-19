@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.nowandfuture.mod.utilities.Log;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.renderer.texture.TextureUtil;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -23,6 +24,7 @@ public abstract class FrameTexture extends DynamicTexture {
 
     public FrameTexture(NativeImage nativeImage) {
         super(nativeImage);
+        close();
         width = nativeImage.getWidth();
         height = nativeImage.getHeight();
     }
@@ -32,7 +34,13 @@ public abstract class FrameTexture extends DynamicTexture {
     }
 
     public FrameTexture(int width, int height, boolean init) {
-        super(width, height, init);
+        //we can't skip the construction...
+        super(0, 0, init);
+        //close native image and its texture in GPU
+        close();
+        if (this.glTextureId == -1) {
+            this.glTextureId = TextureUtil.generateTextureId();
+        }
         this.width = width;
         this.height = height;
     }
@@ -85,11 +93,7 @@ public abstract class FrameTexture extends DynamicTexture {
     public void subBuffer(ByteBuffer byteBuffer,int offsetX,int offsetY, int w , int h, long frameId){
         if(frameId == this.frameId) return;
         this.frameId = frameId;
-        RenderSystem.bindTexture(glTextureId);
-//
-//        ByteBuffer byteBuffer = BufferUtils.createByteBuffer(w * h * BYTES_PER_PIXEL)
-//                .put(buffer.getData());
-//        byteBuffer.flip();
+        bindTexture();
 
         //Send texel data to OpenGL
         glTexSubImage2D(GL_TEXTURE_2D, 0, offsetX,offsetY, w, h, GL_BGR, GL_UNSIGNED_BYTE, byteBuffer);
@@ -139,10 +143,6 @@ public abstract class FrameTexture extends DynamicTexture {
         return frameId;
     }
 
-    public int getGlTextureId(){
-        return glTextureId;
-    }
-
     public int getRealHeight() {
         return ah;
     }
@@ -158,10 +158,4 @@ public abstract class FrameTexture extends DynamicTexture {
     public void setRealWidth(int aw) {
         this.aw = aw;
     }
-
-    public void deleteGlTexture() {
-        RenderSystem.deleteTexture(glTextureId);
-    }
-
-    ;
 }

@@ -53,14 +53,19 @@ public class ScreenCfg extends Screen {
                     reload = false;
                     break;
                 default:
+                    reload = false;
                     break;
             }
 
-            if(reload)
+            if (reload)
                 browser.loadURL(finalUrl);
 
         }
         browser.resize((int) scaleX(scr_width), (int) scaleY(scr_height));
+    }
+
+    public boolean isBrowserActivate() {
+        return browser != null && browser.isActivate();
     }
 
     @Override

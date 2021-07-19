@@ -4,9 +4,16 @@ import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.IStringVisitor;
 
 public class VirtualBrowser implements IBrowser {
+    boolean activate = true;
 
     @Override
     public void close() {
+        activate = false;
+    }
+
+    @Override
+    public boolean isActivate() {
+        return activate;
     }
 
     @Override

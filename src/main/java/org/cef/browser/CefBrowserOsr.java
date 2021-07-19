@@ -53,6 +53,8 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     private int depth = 32;
     private int depth_per_component = 8;
 
+    private boolean activate = true;
+
     CefBrowserOsr(CefClient client, String url, boolean transparent, CefRequestContext context) {
         this(client, url, transparent, context, null, null);
     }
@@ -141,19 +143,19 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     @Override
     public void onPaint(CefBrowser browser, boolean popup, Rectangle[] dirtyRects,
                         ByteBuffer buffer, int width, int height) {
-        if(popup)
+        if (popup)
             return;
 
         final int size = (width * height) << 2;
 
-        synchronized(paintData) {
-            if(buffer.limit() > size)
+        synchronized (paintData) {
+            if (buffer.limit() > size)
                 Log.warning("Skipping MCEF browser frame, data is too heavy"); //TODO: Don't spam
             else {
-                if(paintData.hasFrame) //The previous frame was not uploaded to GL texture, so we skip it and render this on instead
+                if (paintData.hasFrame) //The previous frame was not uploaded to GL texture, so we skip it and render this on instead
                     paintData.fullReRender = true;
 
-                if(paintData.buffer == null || size != paintData.buffer.capacity()) //This only happens when the browser gets resized
+                if (paintData.buffer == null || size != paintData.buffer.capacity()) //This only happens when the browser gets resized
                     paintData.buffer = BufferUtils.createByteBuffer(size);
 
                 paintData.buffer.position(0);
@@ -172,8 +174,8 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     //added by montoyo
     public void mcefUpdate() {
-        synchronized(paintData) {
-            if(paintData.hasFrame) {
+        synchronized (paintData) {
+            if (paintData.hasFrame) {
                 renderer_.onPaint(false, paintData.dirtyRects, paintData.buffer, paintData.width, paintData.height, paintData.fullReRender);
                 paintData.hasFrame = false;
                 paintData.fullReRender = false;
@@ -181,12 +183,12 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
         }
     }
 
-    private long getMCEFWindowsHandler(){
+    private long getMCEFWindowsHandler() {
         return Minecraft.getInstance().getMainWindow().getHandle();
     }
 
-    public static int remapCursor(int cursorType){
-        switch (cursorType){
+    public static int remapCursor(int cursorType) {
+        switch (cursorType) {
             case Cursor.CROSSHAIR_CURSOR:
                 return GLFW.GLFW_CROSSHAIR_CURSOR;
             case Cursor.HAND_CURSOR:
@@ -291,11 +293,17 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     @Override
     public void close() {
-        if(CLEANUP) {
+        if (CLEANUP) {
             renderer_.cleanup();
         }
 
         super.close(true); //true to ignore confirmation popups
+        activate = false;
+    }
+
+    @Override
+    public boolean isActivate() {
+        return activate;
     }
 
     @Override
@@ -322,14 +330,12 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
         MouseEvent ev = new MouseEvent(dc_, MouseEvent.MOUSE_MOVED, System.currentTimeMillis(), mods, x, y, 0, false);
         lastMouseEvent = ev;
         sendMouseEvent(ev);
-//        System.out.println("moved:" + x + ", " + y);
     }
 
     @Override
     public void injectMouseDrag(int x, int y, int btn, int dragX, int dragY) {
         MouseEvent ev = new MouseEvent(dc_, MouseEvent.MOUSE_DRAGGED, 0, InputEvent.getMaskForButton(btn), x, y, 1, false, btn);
         sendMouseEvent(ev);
-
     }
 
     int lastBtn = 0;
@@ -351,8 +357,8 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     @Override
     public void injectKeyPressedByKeyCode(int keyCode, char c, int mods) {
-        if(c != '\0') {
-            synchronized(WORST_HACK) {
+        if (c != '\0') {
+            synchronized (WORST_HACK) {
                 WORST_HACK.put(keyCode, c);
             }
         }
@@ -363,8 +369,8 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     @Override
     public void injectKeyReleasedByKeyCode(int keyCode, char c, int mods) {
-        if(c == '\0') {
-            synchronized(WORST_HACK) {
+        if (c == '\0') {
+            synchronized (WORST_HACK) {
                 c = WORST_HACK.getOrDefault(keyCode, '\0');
             }
         }
@@ -395,22 +401,36 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     }
 
     public static int remapKeycode(int kc, char c) {
-        switch(kc) {
-            case GLFW.GLFW_KEY_BACKSPACE   :   return 0x08;
-            case GLFW.GLFW_KEY_DELETE: return 0x2E;
-            case GLFW.GLFW_KEY_DOWN:   return 0x28;
-            case GLFW.GLFW_KEY_ENTER: return 0x0D;
-            case GLFW.GLFW_KEY_ESCAPE: return 0x1B;
-            case GLFW.GLFW_KEY_LEFT:   return 0x25;
-            case GLFW.GLFW_KEY_RIGHT:  return 0x27;
-            case GLFW.GLFW_KEY_TAB:    return 0x09;
-            case GLFW.GLFW_KEY_UP:     return 0x26;
-            case GLFW.GLFW_KEY_PAGE_UP:  return 0x21;
-            case GLFW.GLFW_KEY_PAGE_DOWN:   return 0x22;
-            case GLFW.GLFW_KEY_END:    return 0x23;
-            case GLFW.GLFW_KEY_HOME:   return 0x24;
+        switch (kc) {
+            case GLFW.GLFW_KEY_BACKSPACE:
+                return KeyEvent.VK_BACK_SPACE;
+            case GLFW.GLFW_KEY_DELETE:
+                return KeyEvent.VK_DELETE;
+            case GLFW.GLFW_KEY_DOWN:
+                return KeyEvent.VK_DOWN;
+            case GLFW.GLFW_KEY_ENTER:
+                return KeyEvent.VK_ENTER;
+            case GLFW.GLFW_KEY_ESCAPE:
+                return KeyEvent.VK_ESCAPE;
+            case GLFW.GLFW_KEY_LEFT:
+                return KeyEvent.VK_LEFT;
+            case GLFW.GLFW_KEY_RIGHT:
+                return KeyEvent.VK_RIGHT;
+            case GLFW.GLFW_KEY_TAB:
+                return KeyEvent.VK_TAB;
+            case GLFW.GLFW_KEY_UP:
+                return KeyEvent.VK_UP;
+            case GLFW.GLFW_KEY_PAGE_UP:
+                return KeyEvent.VK_PAGE_UP;
+            case GLFW.GLFW_KEY_PAGE_DOWN:
+                return KeyEvent.VK_PAGE_DOWN;
+            case GLFW.GLFW_KEY_END:
+                return KeyEvent.VK_END;
+            case GLFW.GLFW_KEY_HOME:
+                return KeyEvent.VK_HOME;
 
-            default: return c;
+            default:
+                return c;
         }
     }
 }

@@ -11,7 +11,7 @@ import java.net.URL;
 import java.nio.file.Path;
 
 public class RemoteFile extends File {
-    private byte[] sum = null;
+    private String sum = null;
     private String remotePath = null;
     private String method = "MD5";
 
@@ -290,11 +290,11 @@ public class RemoteFile extends File {
         setReal(file);
     }
 
-    public byte[] getSum() {
+    public String getSum() {
         return sum;
     }
 
-    public void setSum(byte[] sum) {
+    public void setSum(String sum) {
         this.sum = sum;
     }
 

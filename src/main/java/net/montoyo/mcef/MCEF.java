@@ -104,6 +104,7 @@ public class MCEF {
     }
 
     //This is needed, otherwise for some reason HTTPS doesn't work
+    @Deprecated
     private static void importLetsEncryptCertificate() {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");

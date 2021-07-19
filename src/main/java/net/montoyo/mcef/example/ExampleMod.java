@@ -110,6 +110,10 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
         return (backup != null);
     }
 
+    public BrowserScreen getBackup() {
+        return backup;
+    }
+
     public void showScreen(String url) {
         if (mc.currentScreen instanceof BrowserScreen)
             ((BrowserScreen) mc.currentScreen).loadURL(url);
@@ -197,8 +201,13 @@ public class ExampleMod implements IDisplayHandler, IJSQueryHandler {
     }
 
     public void onDrawHUD(RenderGameOverlayEvent.Post ev) {
-        if (hudBrowser != null)
-            hudBrowser.render(ev.getMatrixStack(), 0, 0, ev.getPartialTicks());
+        if (hudBrowser != null) {
+            if (hudBrowser.isBrowserActivate()) {
+                hudBrowser.render(ev.getMatrixStack(), 0, 0, ev.getPartialTicks());
+            } else {
+                hudBrowser = null;
+            }
+        }
     }
 
 }

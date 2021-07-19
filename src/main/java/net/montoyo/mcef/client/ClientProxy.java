@@ -1,7 +1,7 @@
 package net.montoyo.mcef.client;
 
 import com.nowandfuture.mod.renderer.gui.FPSGui;
-import com.nowandfuture.mod.utilities.MCEF_Downloader;
+import com.nowandfuture.mod.utilities.MCEFDownloader;
 import com.nowandfuture.mod.utilities.RemoteFile;
 import com.nowandfuture.mod.utilities.Utils;
 import com.nowandfuture.mod.utilities.httputils.DownloadConfig;
@@ -89,6 +89,11 @@ public class ClientProxy extends BaseProxy {
         exampleMod = new ExampleMod();
         exampleMod.onPreInit();
 
+        //Init my download mirror as extra "mirror" (it's not a real mirror...) because of the different config file design.
+        MirrorManager.INSTANCE.addExtraMirrors(
+                new Mirror("nowandfuture", MCEFDownloader.getConfigUrl(), Mirror.FLAG_FORCED),
+                new Mirror("nowandfuture", MCEFDownloader.getLibsUrl(), Mirror.FLAG_FORCED));
+
         ROOT = mc.gameDir.getAbsolutePath().replaceAll("\\\\", "/");
         if (ROOT.endsWith("."))
             ROOT = ROOT.substring(0, ROOT.length() - 1);
@@ -110,30 +115,31 @@ public class ClientProxy extends BaseProxy {
         boolean success = false;
 
         //Check and download libraries && config file
-        if (MCEF.SKIP_UPDATES) return;
+        if (MCEF.SKIP_UPDATES) {
+            Log.warning("Skip check Jcef version and download stage!");
+        }
+
         Optional<Consumer<String>> mcLoaderConsumer = StartupMessageManager.mcLoaderConsumer();
         Optional<Consumer<String>> modConsumer = StartupMessageManager.modLoaderConsumer();
         mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start check libraries"));
         Consumer<String> consumer = mcLoaderConsumer.orElse(Log::info);
-        MirrorManager.INSTANCE.addExtraMirrors(
-                new Mirror("nowandfuture", MCEF_Downloader.getConfigUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE),
-                new Mirror("nowandfuture", MCEF_Downloader.getLibsUrl(), Mirror.FLAG_FORCED | Mirror.FLAG_SECURE));
-        Path downloadConfigPath = Paths.get(JCEF_ROOT, MCEF_Downloader.CONFIG_NAME);
+
+        Path downloadConfigPath = Paths.get(JCEF_ROOT, MCEFDownloader.CONFIG_NAME);
         File file = downloadConfigPath.toFile();
 
-        if (!MCEF_Downloader.checkLocalConfigFile(JCEF_ROOT)) {
-            MCEF_Downloader.prepareConfigsMirror();//push the url to first.
+        if (!MCEFDownloader.checkLocalConfigFile(JCEF_ROOT)) {
+            MCEFDownloader.prepareConfigsMirror();//push the url to first.
 
             mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: start collect download source list."));
-            file = MCEF_Downloader.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), modConsumer.get());
+            file = MCEFDownloader.downloadConfigFile(downloadConfigPath.toString(), DownloadConfig.createDefault(), modConsumer.get());
         }
 
         if (file != null && file.exists()) {
             try {
                 mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: check lib files."));
-                MCEF_Downloader.prepareLibsMirror();//push the url to the first.
+                MCEFDownloader.prepareLibsMirror();//push the url to the first.
 
-                success = MCEF_Downloader.downloadLibFilesBy(file, JCEF_ROOT, DownloadConfig.createDefault(), modConsumer.get());
+                success = MCEFDownloader.downloadLibFilesBy(file, JCEF_ROOT, DownloadConfig.createDefault(), modConsumer.get());
                 if (!success) {
                     mcLoaderConsumer.ifPresent(stringConsumer -> stringConsumer.accept("MCEF: download failed, go to Virtual mode."));
                 } else {
@@ -436,6 +442,7 @@ public class ClientProxy extends BaseProxy {
             b.close();
 
         browsers.clear();
+
     }
 
     @Override

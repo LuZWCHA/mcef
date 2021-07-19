@@ -19,7 +19,6 @@ public class PBOFrameTexture extends FrameTexture {
 
     public PBOFrameTexture(NativeImage nativeImage) {
         super(nativeImage);
-
     }
 
     public PBOFrameTexture(int width, int height) {
@@ -30,14 +29,14 @@ public class PBOFrameTexture extends FrameTexture {
     @Override
     public void updateBuffer(ByteBuffer buffer, long id) {
         pbo.setTag(id);
-        RenderSystem.bindTexture(getGlTextureId());
+        bindTexture();
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
         RenderSystem.bindTexture(0);
     }
 
     public void updateBuffer(long pixels, long id) {
         pbo.setTag(id);
-        RenderSystem.bindTexture(getGlTextureId());
+        bindTexture();
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, pixels);
         RenderSystem.bindTexture(0);
     }
@@ -58,7 +57,7 @@ public class PBOFrameTexture extends FrameTexture {
         setRealHeight(h);
         setRealWidth(w);
         pbo.setTag(frameId);
-        RenderSystem.bindTexture(glTextureId);
+        bindTexture();
 
         pbo.bindPBO(GL21.GL_PIXEL_UNPACK_BUFFER);
         pbo.pboByteData(GL21.GL_PIXEL_UNPACK_BUFFER,
@@ -87,9 +86,13 @@ public class PBOFrameTexture extends FrameTexture {
 
     @Override
     public void deleteGlTexture() {
-        pbo.delete();
+        if (pbo != null)
+            pbo.delete();
         super.deleteGlTexture();
     }
 
-
+    @Override
+    public void close() {
+        super.close();
+    }
 }
