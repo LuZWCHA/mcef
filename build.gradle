@@ -33,18 +33,20 @@ compileJava {
 minecraft {
     version = "1.12.2-14.23.5.2847"
     runDir = "run"
+    coreMod = 'net.montoyo.mcef.LoadingPlugin'
     clientJvmArgs += "-Dfml.coreMods.load=net.montoyo.mcef.LoadingPlugin"
+    serverJvmArgs += "-Dfml.coreMods.load=net.montoyo.mcef.LoadingPlugin"
     mappings = "stable_39"
 }
 
 //MCEF: update Let's Encrypt root certificate before building
 task importLetsEncryptCertificate {
     def target = new File(sourceSets.main.resources.srcDirs.first(), "assets/mcef/r3.crt")
-    if(target.exists())
+    if (target.exists())
         target.delete()
 
     new URL("http://montoyo.net/ShareX/root.crt")
-            .withInputStream { i -> target.withOutputStream { it << i }}
+            .withInputStream { i -> target.withOutputStream { it << i } }
     println "updated let's encrypt root certificate"
 }
 
@@ -80,8 +82,9 @@ task deobfJar(type: Jar) {
 jar {
     manifest {
         manifest.attributes([
+                'TweakOrder'                 : '0',
                 "FMLCorePluginContainsFMLMod": 'true',
-                "FMLCorePlugin"              : "net.montoyo.mcef.LoadingPlugin",
+                "ForceLoadAsMod"             : 'true',
                 "TweakClass"                 : "org.spongepowered.asm.launch.MixinTweaker"
         ])
     }
@@ -105,11 +108,11 @@ processResources {
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-                
+
         // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        expand 'version': project.version, 'mcversion': project.minecraft.version
     }
-        
+
     // copy everything else except the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'

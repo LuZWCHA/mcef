@@ -73,7 +73,7 @@ public class BrowserScreen extends GuiScreen {
             buttonList.add(go = (new GuiButton(2, width - 60, 0, 20, 20, "Go")));
             buttonList.add(min = (new GuiButton(3, width - 20, 0, 20, 20, "_")));
             buttonList.add(vidMode = (new GuiButton(4, width - 40, 0, 20, 20, "YT")));
-            vidMode.enabled = false;
+            vidMode.enabled = true;
             
             url = new GuiTextField(5, fontRenderer, 40, 0, width - 100, 20);
             url.setMaxStringLength(65535);
@@ -224,7 +224,7 @@ public class BrowserScreen extends GuiScreen {
     public void onUrlChanged(IBrowser b, String nurl) {
         if(b == browser && url != null) {
             url.setText(nurl);
-            vidMode.enabled = nurl.matches(YT_REGEX1) || nurl.matches(YT_REGEX2) || nurl.matches(YT_REGEX3);
+//            vidMode.enabled = nurl.matches(YT_REGEX1) || nurl.matches(YT_REGEX2) || nurl.matches(YT_REGEX3);
         }
     }
     
@@ -253,7 +253,7 @@ public class BrowserScreen extends GuiScreen {
                 vId = loc.replaceFirst(YT_REGEX1, "$1");
             else if(loc.matches(YT_REGEX2))
                 vId = loc.replaceFirst(YT_REGEX2, "$1");
-            else if(loc.matches(YT_REGEX3))
+            else
                 redo = true;
 
             if(vId != null || redo) {
