@@ -6,6 +6,7 @@
 
 package org.cef.browser;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.nowandfuture.mod.utilities.Log;
@@ -13,6 +14,7 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.system.MemoryUtil;
 
 import java.awt.*;
@@ -69,7 +71,7 @@ public class CefRenderer {
         }
     }
 
-    public void render(double x1, double y1, double x2, double y2) {
+    public void render(MatrixStack stack, float x1, float y1, float x2, float y2) {
         if (view_width_ == 0 || view_height_ == 0)
             return;
 
@@ -209,5 +211,9 @@ public class CefRenderer {
 
     public int getTextureId() {
         return texture_id_[0];
+    }
+
+    public ResourceLocation getTextureLocation() {
+        return null;
     }
 }

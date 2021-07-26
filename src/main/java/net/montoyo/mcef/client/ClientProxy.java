@@ -375,7 +375,7 @@ public class ClientProxy extends BaseProxy {
         if (ev.phase == TickEvent.Phase.START) {
 
             //Check if our key was pressed
-            if (key.isKeyDown()) {
+            if (key.isPressed()) {
                 //Display the UI.
                 mc.displayGuiScreen(new FPSGui());
             }
@@ -393,6 +393,8 @@ public class ClientProxy extends BaseProxy {
 
             displayHandler.update();
             mc.getProfiler().endTick();
+
+            browsers.removeIf(cefBrowserOsr -> !cefBrowserOsr.isActivate());
         }
     }
 

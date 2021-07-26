@@ -158,16 +158,16 @@ public class ScreenCfg extends Screen {
     }
 
     @Override
-    public void render(MatrixStack p_230430_1_, int x, int y, float p_230430_4_) {
+    public void render(MatrixStack stack, int x, int y, float p_230430_4_) {
         RenderSystem.disableDepthTest();
         RenderSystem.enableTexture();
-        browser.draw(unscaleX(scr_x), unscaleY(scr_height + scr_y), unscaleX(scr_width + scr_x), unscaleY(scr_y));
+        browser.draw(stack, unscaleX(scr_x), unscaleY(scr_height + scr_y), unscaleX(scr_width + scr_x), unscaleY(scr_y));
 
         if (drawSquare) {
             boolean in = isInResizeRect(x - scr_x, y - scr_y) || resizing;
             Tessellator t = Tessellator.getInstance();
             BufferBuilder vb = t.getBuffer();
-            if(in) {
+            if (in) {
                 RenderSystem.clearColor(0, 1, 0, 1);
                 vb.begin(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR);
                 vb.pos(unscaleX(scr_x + scr_width), unscaleY(scr_y + scr_height), 0.0).color(0, 255, 0, 255).endVertex();

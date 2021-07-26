@@ -24,18 +24,18 @@ public abstract class FrameTexture extends DynamicTexture {
 
     public FrameTexture(NativeImage nativeImage) {
         super(nativeImage);
-        close();
         width = nativeImage.getWidth();
         height = nativeImage.getHeight();
+        close();
     }
 
     public FrameTexture(int width, int height) {
-        this(width, height, false);
+        this(width, height, true);
     }
 
     public FrameTexture(int width, int height, boolean init) {
         //we can't skip the construction...
-        super(0, 0, init);
+        super(width, height, init);
         //close native image and its texture in GPU
         close();
         if (this.glTextureId == -1) {
@@ -157,5 +157,10 @@ public abstract class FrameTexture extends DynamicTexture {
 
     public void setRealWidth(int aw) {
         this.aw = aw;
+    }
+
+    @Override
+    public void close() {
+        super.close();
     }
 }

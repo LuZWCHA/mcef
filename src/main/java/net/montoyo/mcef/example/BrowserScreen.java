@@ -5,8 +5,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
 import net.montoyo.mcef.MCEF;
 import net.montoyo.mcef.api.API;
 import net.montoyo.mcef.api.IBrowser;
@@ -17,6 +19,8 @@ import java.awt.event.MouseEvent;
 public class BrowserScreen extends Screen {
 
     IBrowser browser = null;
+    private int lastWidth = -1, lastHeight = -1;
+
     private Button back = null;
     private Button fwd = null;
     private Button go = null;
@@ -73,8 +77,12 @@ public class BrowserScreen extends Screen {
         }
 
         //Resize the browser if window size changed
-        if (browser != null && minecraft != null)
-            browser.resize(minecraft.getMainWindow().getWidth(), minecraft.getMainWindow().getHeight() - scaleY(20));
+        if (browser != null && minecraft != null) {
+            lastWidth = minecraft.getMainWindow().getWidth();
+            lastHeight = minecraft.getMainWindow().getHeight() - scaleY(20);
+            if (lastWidth > 0 && lastHeight > 0)
+                browser.resize(lastWidth, lastHeight);
+        }
 
         //Create GUI
         //may remove the code, super class has cleared them
@@ -82,21 +90,21 @@ public class BrowserScreen extends Screen {
         children.clear();
 
         if (url == null) {
-            buttons.add(back = (new Button(0, 0, 20, 20, new StringTextComponent("<"), new Button.IPressable() {
+            buttons.add(back = (new ExtendedButton(0, 0, 20, 20, new StringTextComponent("<"), new Button.IPressable() {
                 @Override
                 public void onPress(Button btn) {
                     if (browser == null) return;
                     browser.goBack();
                 }
             })));
-            buttons.add(fwd = (new Button(20, 0, 20, 20, new StringTextComponent(">"), new Button.IPressable() {
+            buttons.add(fwd = (new ExtendedButton(20, 0, 20, 20, new StringTextComponent(">"), new Button.IPressable() {
                 @Override
                 public void onPress(Button btn) {
                     if (browser == null) return;
                     browser.goForward();
                 }
             })));
-            buttons.add(go = (new Button(width - 60, 0, 20, 20, new StringTextComponent("Go"), new Button.IPressable() {
+            buttons.add(go = (new ExtendedButton(width - 60, 0, 20, 20, new StringTextComponent("Go"), new Button.IPressable() {
                 @Override
                 public void onPress(Button btn) {
                     if (browser == null) return;
@@ -105,7 +113,7 @@ public class BrowserScreen extends Screen {
                     browser.loadURL(fixedURL);
                 }
             })));
-            buttons.add(min = (new Button(width - 20, 0, 20, 20, new StringTextComponent("_"), new Button.IPressable() {
+            buttons.add(min = (new ExtendedButton(width - 20, 0, 20, 20, new StringTextComponent("_"), new Button.IPressable() {
                 @Override
                 public void onPress(Button btn) {
 
@@ -115,7 +123,7 @@ public class BrowserScreen extends Screen {
                     }
                 }
             })));
-            buttons.add(vidMode = (new Button(width - 40, 0, 20, 20, new StringTextComponent("[]"), new Button.IPressable() {
+            buttons.add(vidMode = (new ExtendedButton(width - 40, 0, 20, 20, new StringTextComponent("[]"), new Button.IPressable() {
                 @Override
                 public void onPress(Button btn) {
                     if (browser == null) return;
@@ -208,12 +216,21 @@ public class BrowserScreen extends Screen {
             urlToLoad = null;
         }
 
-        if (url != null)
+        if (url != null) {
             if (url.isFocused()) {
                 url.tick();
             } else {
                 url.setCursorPositionEnd();
             }
+        }
+
+        if (minecraft != null && browser != null && browser.isActivate()) {
+            int curWidth = minecraft.getMainWindow().getWidth();
+            int curHeight = minecraft.getMainWindow().getHeight() - scaleY(20);
+            if (curHeight > 0 && curWidth > 0 && (lastWidth != curWidth || lastHeight != curHeight)) {
+                browser.resize(curWidth, curHeight);
+            }
+        }
 
     }
 
@@ -227,13 +244,11 @@ public class BrowserScreen extends Screen {
         //Render buttons
         super.render(matrixStack, mouseX, mouseY, partialTicks);
 
+        ResourceLocation location = browser.getTextureLocation();
         //Renders the browser if itsn't null
-        if (browser != null) {
-            RenderSystem.disableDepthTest();
+        if (browser != null && location != null) {
             RenderSystem.enableTexture();
-            RenderSystem.clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-            browser.draw(0d, height, width, 20.d); //Don't forget to flip Y axis.
-            RenderSystem.enableDepthTest();
+            browser.draw(matrixStack, 0d, height, width, 20.d); //Don't forget to flip Y axis.
         }
     }
 
@@ -252,10 +267,10 @@ public class BrowserScreen extends Screen {
     }
 
     @Override
-    public boolean charTyped(char key, int code) {
-        boolean consume = super.charTyped(key, code);
+    public boolean charTyped(char key, int mod) {
+        boolean consume = super.charTyped(key, mod);
         if (browser != null && !consume) {
-            browser.injectKeyTyped(key, code, getMask());
+            browser.injectKeyTyped(key, key, getMask());
             return true;
         }
 

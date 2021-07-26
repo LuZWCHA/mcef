@@ -1,5 +1,6 @@
 package net.montoyo.mcef.virtual;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.IStringVisitor;
 
@@ -21,7 +22,7 @@ public class VirtualBrowser implements IBrowser {
     }
 
     @Override
-    public void draw(double x1, double y1, double x2, double y2) {
+    public void draw(MatrixStack stack, double x1, double y1, double x2, double y2) {
     }
 
     @Override

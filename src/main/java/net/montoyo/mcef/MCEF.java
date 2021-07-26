@@ -1,5 +1,6 @@
 package net.montoyo.mcef;
 
+import com.nowandfuture.mod.utilities.httputils.TrustAll;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -14,6 +15,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.montoyo.mcef.client.ClientProxy;
 import net.montoyo.mcef.utilities.Log;
+import net.montoyo.mcef.utilities.Util;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -84,7 +86,7 @@ public class MCEF {
 
     //Called by Minecraft.run() if the ShutdownPatcher succeeded
     public void onMinecraftWorldUnload(WorldEvent.Unload ev) {
-        if(ev.getWorld() instanceof World) {
+        if (ev.getWorld() instanceof World && ((World) ev.getWorld()).isRemote) {
             Log.info("Minecraft shutdown hook called!");
             PROXY.stopActivateBrowser();
         }
@@ -92,9 +94,9 @@ public class MCEF {
 
     public void onLoad(final ModConfig.Loading configEvent) {
         //update the config
-        importLetsEncryptCertificate();
+//        importLetsEncryptCertificate();
         //set the ssl factory if needed
-        //Util.SSL_SOCKET_FACTORY = SSL_SOCKET_FACTORY;
+        Util.SSL_SOCKET_FACTORY = TrustAll.socketFactory();
         loadConfig();
     }
 

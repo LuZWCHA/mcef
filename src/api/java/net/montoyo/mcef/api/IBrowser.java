@@ -1,5 +1,10 @@
 package net.montoyo.mcef.api;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.util.ResourceLocation;
+
+import javax.annotation.Nullable;
+
 public interface IBrowser {
 
     /**
@@ -19,19 +24,31 @@ public interface IBrowser {
 
     /**
      * Renders the web view into Minecraft.
-     * 
-     * @param x1 The first X coord of the rectangle to render the web view on (left).
-     * @param y1 The first Y coord of the rectangle to render the web view on (top).
-     * @param x2 The second X coord of the rectangle to render the web view on (right).
-     * @param y2 The second Y coord of the rectangle to render the web view on (bottom).
+     *
+     * @param stack the matrix stack
+     * @param x1    The first X coord of the rectangle to render the web view on (left).
+     * @param y1    The first Y coord of the rectangle to render the web view on (top).
+     * @param x2    The second X coord of the rectangle to render the web view on (right).
+     * @param y2    The second Y coord of the rectangle to render the web view on (bottom).
      */
-    void draw(double x1, double y1, double x2, double y2);
+    void draw(MatrixStack stack, double x1, double y1, double x2, double y2);
 
     /**
      * Gets the OpenGL texture ID of the web view.
+     *
      * @return the OpenGL texture ID of the web view.
      */
     int getTextureID();
+
+    /**
+     * Gets the Minecraft texture resource location of the web view.
+     *
+     * @return the Minecraft texture resource location of the web view.
+     */
+    @Nullable
+    default ResourceLocation getTextureLocation() {
+        return null;
+    }
 
     /**
      * Simulates a mouse move.

@@ -6,12 +6,18 @@
 
 package org.cef.browser;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.nowandfuture.mod.renderer.PBOFrameTexture;
 import com.nowandfuture.mod.utilities.Log;
-import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Matrix4f;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
@@ -27,44 +33,65 @@ public class CefPBORenderer extends CefRenderer {
     private long id = 0;
 
     private PBOFrameTexture pboFrameTexture;
+    private final TextureManager textureManager;
+    private ResourceLocation location;
+
+    {
+        location = null;
+        textureManager = Minecraft.getInstance().getTextureManager();
+    }
+
 
     protected CefPBORenderer(boolean transparent) {
         super(transparent);
     }
 
     protected void cleanup() {
-        if (pboFrameTexture != null)
-            pboFrameTexture.deleteGlTexture();
+        if (location != null) {
+            //release the pointer in memory
+            //pbo not delete here
+            textureManager.deleteTexture(location);
+            location = null;
+        }
+
+        if (pboFrameTexture != null) {
+            //make sure the pbo is cleanup.
+            pboFrameTexture.close();
+            pboFrameTexture = null;
+        }
     }
 
-    public void render(double x1, double y1, double x2, double y2) {
-        if (view_width_ == 0 || view_height_ == 0)
+    public void render(MatrixStack stack, float x1, float y1, float x2, float y2) {
+        if (view_width_ == 0 || view_height_ == 0 || location == null)
             return;
 
-        Tessellator t = Tessellator.getInstance();
-        BufferBuilder vb = t.getBuffer();
-
-        RenderSystem.bindTexture(pboFrameTexture.getGlTextureId());
-        vb.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        vb.pos(x1, y1, 0.0).tex(0.0f, 1.0f).endVertex();
-        vb.pos(x2, y1, 0.0).tex(1.f, 1.f).endVertex();
-        vb.pos(x2, y2, 0.0).tex(1.f, 0.0f).endVertex();
-        vb.pos(x1, y2, 0.0).tex(0.0f, 0.0f).endVertex();
-        t.draw();
+        IRenderTypeBuffer.Impl t = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
+        IVertexBuilder vb = t.getBuffer(RenderType.getText(location));
+        Matrix4f matrix4f = stack.getLast().getMatrix();
+        RenderSystem.bindTexture(getTextureId());
+//        vb.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        vb.pos(matrix4f, x1, y1, 0.0f).color(255, 255, 255, 255).tex(0.0f, 1.0f).lightmap(15728880).endVertex();
+        vb.pos(matrix4f, x2, y1, 0.0f).color(255, 255, 255, 255).tex(1.f, 1.f).lightmap(15728880).endVertex();
+        vb.pos(matrix4f, x2, y2, 0.0f).color(255, 255, 255, 255).tex(1.f, 0.0f).lightmap(15728880).endVertex();
+        vb.pos(matrix4f, x1, y2, 0.0f).color(255, 255, 255, 255).tex(0.0f, 0.0f).lightmap(15728880).endVertex();
+//        t.draw();
+        t.finish();
         RenderSystem.bindTexture(0);
     }
 
     protected void onPaint(boolean popup, Rectangle[] dirtyRects, ByteBuffer buffer, int width, int height, boolean completeReRender) {
         if (transparent_) // Enable alpha blending.
             enableBlend();
-        final int size = (width * height) << 2;
+        int size = (width * height) << 2;
         if (size > buffer.limit()) {
             Log.warning("Bad data passed to CefRenderer.onPaint() triggered safe guards... (1)");
             return;
         }
 
-        if (pboFrameTexture == null)
+        if (pboFrameTexture == null) {
             pboFrameTexture = new PBOFrameTexture(width, height);
+            location = textureManager.getDynamicTextureLocation("cef_frame", pboFrameTexture);
+        }
 
         // Enable 2D textures.
         RenderSystem.enableTexture();
@@ -98,7 +125,8 @@ public class CefPBORenderer extends CefRenderer {
 
                 // Update just the dirty rectangles.
                 for (Rectangle rect : dirtyRects) {
-                    if (rect.x < 0 || rect.y < 0 || rect.x + rect.width > view_width_ || rect.y + rect.height > view_height_)
+                    size = rect.height * rect.width * 4;
+                    if (size > buffer.limit() || rect.x < 0 || rect.y < 0 || rect.x + rect.width > view_width_ || rect.y + rect.height > view_height_)
                         Log.warning("Bad data passed to CefRenderer.onPaint() triggered safe guards... (2)");
                     else {
                         glPixelStorei(GL_UNPACK_SKIP_PIXELS, rect.x);
@@ -150,5 +178,10 @@ public class CefPBORenderer extends CefRenderer {
         if (pboFrameTexture == null)
             return 0;
         return pboFrameTexture.getGlTextureId();
+    }
+
+    @Override
+    public ResourceLocation getTextureLocation() {
+        return location;
     }
 }

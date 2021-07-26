@@ -6,7 +6,10 @@
 
 package org.cef.browser;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.ResourceLocation;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.IStringVisitor;
 import net.montoyo.mcef.client.StringVisitor;
@@ -19,6 +22,7 @@ import org.cef.handler.CefScreenInfo;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.dnd.*;
@@ -175,7 +179,7 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     //added by montoyo
     public void mcefUpdate() {
         synchronized (paintData) {
-            if (paintData.hasFrame) {
+            if (paintData.hasFrame && isActivate()) {
                 renderer_.onPaint(false, paintData.dirtyRects, paintData.buffer, paintData.width, paintData.height, paintData.fullReRender);
                 paintData.hasFrame = false;
                 paintData.fullReRender = false;
@@ -293,8 +297,15 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
 
     @Override
     public void close() {
+        if (!activate) return;
+
         if (CLEANUP) {
-            renderer_.cleanup();
+            //cleanup at render thread
+            if (RenderSystem.isOnRenderThread()) {
+                renderer_.cleanup();
+            } else {
+                RenderSystem.recordRenderCall(() -> renderer_.cleanup());
+            }
         }
 
         super.close(true); //true to ignore confirmation popups
@@ -315,13 +326,19 @@ public class CefBrowserOsr extends CefBrowser_N implements CefRenderHandler, IBr
     }
 
     @Override
-    public void draw(double x1, double y1, double x2, double y2) {
-        renderer_.render(x1, y1, x2, y2);
+    public void draw(MatrixStack stack, double x1, double y1, double x2, double y2) {
+        renderer_.render(stack, (float) x1, (float) y1, (float) x2, (float) y2);
     }
 
     @Override
     public int getTextureID() {
         return renderer_.getTextureId();
+    }
+
+    @Override
+    public @Nullable
+    ResourceLocation getTextureLocation() {
+        return renderer_.getTextureLocation();
     }
 
     @Override
