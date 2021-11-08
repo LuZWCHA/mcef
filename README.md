@@ -6,7 +6,7 @@ It is based on JCEF (https://code.google.com/p/javachromiumembedded/), which is 
 # Update
 1. Update the lib java-cef to the latest commit.
 2. Fix some BUGs.
-3. To render the page in Mian Frame when LEFT-CLICK(Jcef not support it when ORS mode).
+3. To render the page in Mian Frame when LEFT-CLICK (Jcef not support it when ORS mode on).
 4. Render screens by PBO.
 
 
